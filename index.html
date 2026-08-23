@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KSA System</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --blue-50:#eef4fb; --blue-100:#d9e7f6; --blue-200:#b7d2ee;
+    --blue:#3572b6; --blue-light:#4f8fd6; --blue-dark:#1e4573; --blue-deep:#122c47;
+    --ink:#16233a; --ink-soft:#5c6b82; --ink-faint:#94a2b8;
+    --line:#e6ebf2; --line-soft:#f0f3f8; --bg:#f3f6fb; --card:#ffffff;
+    --ok:#1f9d55; --ok-bg:#e7f8ee; --warn:#c0392b; --warn-bg:#fdecea; --amber:#c67c1c; --amber-bg:#fdf3e3;
+    --radius-lg:18px; --radius:14px; --radius-sm:10px;
+    --shadow-sm: 0 1px 2px rgba(22,35,58,.04);
+    --shadow: 0 1px 2px rgba(22,35,58,.04), 0 8px 24px -12px rgba(22,35,58,.14);
+    --shadow-lg: 0 20px 40px -16px rgba(20,40,70,.22);
+    --ease: cubic-bezier(.4,0,.2,1);
+  }
+  *{box-sizing:border-box; margin:0; padding:0; font-family:'Plus Jakarta Sans',sans-serif;}
+  body{background:var(--bg); color:var(--ink); height:100vh; overflow:hidden;}
+  ::selection{background:var(--blue-100); color:var(--blue-dark);}
+  ::-webkit-scrollbar{width:8px; height:8px;}
+  ::-webkit-scrollbar-thumb{background:#cfd8e6; border-radius:8px;}
+  ::-webkit-scrollbar-thumb:hover{background:#b7c3d6;}
+
+  @keyframes fadeUp{from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);}}
+  @keyframes fadeIn{from{opacity:0;} to{opacity:1;}}
+  @keyframes popIn{0%{opacity:0; transform:scale(.92);} 100%{opacity:1; transform:scale(1);}}
+  @keyframes blipPulse{0%,100%{box-shadow:0 0 0 0 rgba(124,255,158,.5);} 50%{box-shadow:0 0 0 6px rgba(124,255,158,0);}}
+  @keyframes shimmer{0%{background-position:-400px 0;} 100%{background-position:400px 0;}}
+  @keyframes floatBlob{0%,100%{transform:translate(0,0) scale(1);} 50%{transform:translate(20px,-24px) scale(1.06);}}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  @keyframes toastIn{from{opacity:0; transform:translateX(24px);} to{opacity:1; transform:translateX(0);}}
+  @keyframes checkPop{0%{transform:scale(0) rotate(-20deg);} 60%{transform:scale(1.25) rotate(6deg);} 100%{transform:scale(1) rotate(0);}}
+
+  .skeleton{
+    background: linear-gradient(90deg, var(--line-soft) 25%, #e4e9f1 37%, var(--line-soft) 63%);
+    background-size:400px 100%; animation: shimmer 1.4s ease-in-out infinite; border-radius:6px;
+  }
+
+  /* ---------- LOGIN ---------- */
+  #loginScreen{
+    position:fixed; inset:0; z-index:50; display:flex; align-items:center; justify-content:center;
+    background: linear-gradient(150deg, var(--blue) 0%, var(--blue-dark) 60%, var(--blue-deep) 100%);
+    overflow:hidden;
+  }
+  .blob{position:absolute; border-radius:50%; filter:blur(60px); opacity:.35; animation: floatBlob 9s var(--ease) infinite;}
+  .blob1{width:420px; height:420px; background:#7fb4ff; top:-120px; left:-100px;}
+  .blob2{width:360px; height:360px; background:#8fc1ff; bottom:-140px; right:-80px; animation-delay:-4s;}
+  .blob3{width:260px; height:260px; background:#a7d8ff; bottom:20%; left:10%; animation-delay:-2s;}
+
+  .login-panel{
+    position:relative; width:920px; max-width:92vw; min-height:530px; background:var(--card); border-radius:24px; overflow:hidden;
+    display:grid; grid-template-columns:1.05fr 1fr; box-shadow:0 40px 80px -24px rgba(6,16,32,.55);
+    animation: popIn .5s var(--ease);
+  }
+  .login-brand{
+    position:relative; background: linear-gradient(160deg, var(--blue-dark), var(--blue-deep) 80%);
+    color:white; padding:50px 44px; display:flex; flex-direction:column; justify-content:space-between; overflow:hidden;
+  }
+  .login-brand::before{
+    content:''; position:absolute; width:300px; height:300px; border-radius:50%;
+    background:radial-gradient(circle, rgba(255,255,255,.14), transparent 70%); top:-100px; right:-100px;
+  }
+  .brand-mark{display:flex; align-items:center; gap:10px; font-weight:800; font-size:20px; letter-spacing:.02em; position:relative;}
+  .brand-mark .dot{width:11px; height:11px; border-radius:4px; background:linear-gradient(135deg,#9fd0ff,#5aa3ec); box-shadow:0 0 0 4px rgba(159,208,255,.18);}
+  .login-brand h1{font-size:31px; line-height:1.25; margin-top:60px; font-weight:700; max-width:290px; position:relative;}
+  .login-brand p{margin-top:14px; color:#c8ddf5; font-size:14px; line-height:1.65; max-width:280px; position:relative;}
+  .brand-foot{font-size:12px; color:#8fb0d6; margin-top:40px; display:flex; align-items:center; gap:8px; position:relative;}
+  .brand-foot .live-dot{width:6px; height:6px; border-radius:50%; background:#7CFF9E; animation: blipPulse 2s infinite;}
+
+  .login-form{padding:54px 46px; display:flex; flex-direction:column; justify-content:center; animation: fadeUp .5s var(--ease) .1s both;}
+  .login-form .eyebrow{font-size:12px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--blue);}
+  .login-form h2{font-size:23px; margin-top:8px; font-weight:800;}
+  .login-form .sub{color:var(--ink-soft); font-size:13.5px; margin-top:6px; margin-bottom:30px;}
+  .field{margin-bottom:17px; position:relative;}
+  .field label{display:block; font-size:12.5px; font-weight:700; color:var(--ink); margin-bottom:7px;}
+  .field input{
+    width:100%; height:46px; border:1.5px solid var(--line); border-radius:11px;
+    padding:0 15px; font-size:14px; background:#fbfcfe; transition:all .18s var(--ease);
+  }
+  .field input:focus{outline:none; border-color:var(--blue); background:white; box-shadow:0 0 0 4px var(--blue-50);}
+  .btn-primary{
+    width:100%; height:48px; border:none; border-radius:11px; margin-top:8px;
+    background: linear-gradient(135deg, var(--blue), var(--blue-dark)); color:white; font-weight:700; font-size:14px;
+    letter-spacing:.02em; cursor:pointer; transition:all .18s var(--ease); position:relative; overflow:hidden;
+    box-shadow:0 8px 20px -8px rgba(53,114,182,.6);
+  }
+  .btn-primary:hover{transform:translateY(-1px); box-shadow:0 12px 26px -8px rgba(53,114,182,.7);}
+  .btn-primary:active{transform:translateY(0px) scale(.98);}
+  .btn-primary:disabled{opacity:.65; cursor:not-allowed; transform:none;}
+  .spinner{display:inline-block; width:14px; height:14px; border:2px solid rgba(255,255,255,.4); border-top-color:white; border-radius:50%; animation:spin .7s linear infinite; vertical-align:-2px; margin-right:7px;}
+  .login-error{margin-top:14px; font-size:12.5px; color:var(--warn); text-align:center; min-height:16px; animation: fadeIn .2s;}
+
+  /* ---------- APP SHELL ---------- */
+  #app{display:none; height:100vh; animation: fadeIn .35s var(--ease);}
+  .shell{display:flex; height:100vh;}
+  .sidebar{width:264px; background:var(--card); border-right:1px solid var(--line); display:flex; flex-direction:column; transition: width .25s var(--ease);}
+  .logo-row{padding:24px 22px 18px; display:flex; align-items:center; gap:10px; border-bottom:1px solid var(--line);}
+  .logo-row .dot{width:11px; height:11px; border-radius:4px; background:linear-gradient(135deg,var(--blue-light),var(--blue-dark));}
+  .logo-row span{font-weight:800; font-size:17px; letter-spacing:.01em; color:var(--blue-dark);}
+
+  .nav{padding:16px 12px; flex:1; overflow-y:auto;}
+  .nav-item{
+    display:flex; align-items:center; gap:10px; padding:11px 12px; border-radius:10px;
+    font-size:13.5px; font-weight:600; color:var(--ink); cursor:pointer; margin-bottom:3px;
+    transition: all .16s var(--ease); position:relative;
+  }
+  .nav-item .ic{width:18px; text-align:center; opacity:.85; transition:transform .16s var(--ease);}
+  .nav-item:hover{background:var(--blue-50); color:var(--blue-dark);}
+  .nav-item:hover .ic{transform:scale(1.1);}
+  .nav-item.active{background:linear-gradient(135deg, var(--blue), var(--blue-dark)); color:white; box-shadow:0 6px 14px -6px rgba(53,114,182,.5);}
+  .nav-children{margin:2px 0 6px 30px; max-height:0; overflow:hidden; transition: max-height .25s var(--ease);}
+  .nav-children.open{max-height:200px;}
+  .nav-child{padding:9px 11px; margin-bottom:3px; border-radius:8px; cursor:pointer; font-size:12.5px; color:var(--ink-soft); font-weight:600; transition: all .15s var(--ease); border-left:2px solid transparent;}
+  .nav-child:hover{background:var(--blue-50); color:var(--blue-dark); border-left-color:var(--blue-200);}
+  .nav-child.active{background:var(--blue-100); color:var(--blue-dark); border-left-color:var(--blue);}
+
+  .user-box{margin:14px; padding:14px; border-radius:14px; background:linear-gradient(145deg, var(--blue-50), #f7fafd); border:1px solid var(--blue-100); display:flex; gap:10px; align-items:center; flex-wrap:wrap;}
+  .avatar{width:38px; height:38px; border-radius:11px; background:linear-gradient(135deg, var(--blue-light), var(--blue-dark)); color:white; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:14px; flex-shrink:0;}
+  .user-meta{flex:1; min-width:0;}
+  .user-meta .name{font-size:13px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .user-meta .role{font-size:11px; color:var(--ink-soft); margin-top:1px;}
+  .user-box button{width:100%; height:32px; border-radius:8px; border:1px solid var(--line); background:white; font-size:12px; font-weight:600; color:var(--ink-soft); cursor:pointer; transition:all .15s var(--ease);}
+  .user-box button:hover{border-color:var(--warn); color:var(--warn); background:var(--warn-bg);}
+
+  .main{flex:1; display:flex; flex-direction:column; min-width:0;}
+  .topbar{
+    height:68px; padding:0 28px; display:flex; align-items:center; justify-content:space-between;
+    background:linear-gradient(90deg, var(--blue), var(--blue-light)); color:white; position:relative; overflow:hidden;
+  }
+  .topbar h2{font-size:17px; font-weight:700; letter-spacing:.01em; animation: fadeUp .3s var(--ease);}
+  .live-pill{display:flex; align-items:center; gap:7px; background:rgba(255,255,255,.16); backdrop-filter:blur(4px); padding:7px 14px; border-radius:20px; font-size:12px; font-weight:600;}
+  .live-pill .blip{width:7px; height:7px; border-radius:50%; background:#7CFF9E; animation: blipPulse 2s infinite;}
+
+  .content{flex:1; overflow-y:auto; padding:26px 30px;}
+  .page{animation: fadeUp .3s var(--ease);}
+  .card{background:var(--card); border:1px solid var(--line); border-radius:var(--radius-lg); box-shadow:var(--shadow); padding:22px; margin-bottom:20px; transition: box-shadow .2s var(--ease);}
+  .card h3{font-size:15px; font-weight:700; color:var(--ink);}
+
+  .stat-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:16px; margin-bottom:20px;}
+  .stat{background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:18px; box-shadow:var(--shadow); transition: all .2s var(--ease); cursor:default;}
+  .stat:hover{transform:translateY(-2px); box-shadow:var(--shadow-lg);}
+  .stat .label{font-size:11.5px; color:var(--ink-soft); font-weight:600; text-transform:uppercase; letter-spacing:.04em;}
+  .stat .value{font-size:27px; font-weight:800; margin-top:8px; color:var(--ink);}
+
+  .table-wrap{width:100%; overflow-x:auto; border-radius:10px;}
+  .table-wrap::-webkit-scrollbar{height:8px;}
+  .table-wrap::-webkit-scrollbar-thumb{background:var(--line); border-radius:8px;}
+  table{width:100%; min-width:720px; border-collapse:collapse; font-size:12.5px; table-layout:fixed;}
+  thead th{background:var(--blue-dark); color:white; text-align:left; padding:11px 12px; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.03em; white-space:nowrap;}
+  thead th:first-child{border-top-left-radius:10px;}
+  thead th:last-child{border-top-right-radius:10px;}
+  tbody td{padding:11px 12px; border-bottom:1px solid var(--line-soft); color:var(--ink); overflow-wrap:anywhere; word-break:break-word;}
+  tbody tr{transition: background .12s var(--ease);}
+  tbody tr:hover{background:var(--blue-50);}
+  tr.row-selisih{background:var(--warn-bg);}
+  tr.row-selisih:hover{background:#fbe1de;}
+  tr.row-in{animation: fadeUp .3s var(--ease) both;}
+
+  .badge{display:inline-flex; align-items:center; gap:5px; padding:4px 11px; border-radius:20px; font-size:11px; font-weight:700;}
+  .badge.ok{background:var(--ok-bg); color:var(--ok);}
+  .badge.warn{background:var(--warn-bg); color:var(--warn);}
+
+  .btn-mini{border:none; border-radius:8px; padding:7px 12px; font-size:11px; font-weight:700; cursor:pointer; transition: all .15s var(--ease);}
+  .btn-mini.acc{background:var(--ok); color:white; box-shadow:0 4px 10px -4px rgba(31,157,85,.5);}
+  .btn-mini.acc:hover{background:#188549; transform:translateY(-1px);}
+  .btn-mini.wa{background:var(--blue); color:white; box-shadow:0 4px 10px -4px rgba(53,114,182,.5);}
+  .btn-mini.wa:hover{background:var(--blue-dark); transform:translateY(-1px);}
+  .check-acc{font-size:19px; color:var(--ok); font-weight:800; display:inline-block; animation: checkPop .35s var(--ease);}
+
+  .toolbar{display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:16px;}
+  .search-wrap{position:relative; flex:1; min-width:220px; max-width:320px;}
+  .search-wrap .ic{position:absolute; left:13px; top:50%; transform:translateY(-50%); color:var(--ink-faint); font-size:13px; pointer-events:none;}
+  .toolbar input{width:100%; height:41px; border:1.5px solid var(--line); border-radius:10px; padding:0 14px 0 36px; font-size:13px; background:white; transition:all .15s var(--ease);}
+  .toolbar input:focus{outline:none; border-color:var(--blue); box-shadow:0 0 0 4px var(--blue-50);}
+  .btn-outline{height:41px; padding:0 16px; border-radius:10px; border:1.5px solid var(--blue); background:white; color:var(--blue); font-weight:700; font-size:12.5px; cursor:pointer; transition: all .15s var(--ease); display:inline-flex; align-items:center; gap:6px;}
+  .btn-outline:hover{background:var(--blue-50); transform:translateY(-1px);}
+  .btn-outline:active{transform:translateY(0);}
+  .btn-outline.spinning .ic{animation: spin .7s linear infinite; display:inline-block;}
+  .ic-refresh{vertical-align:-2.5px; margin-right:2px; transition:transform .16s var(--ease);}
+  .btn-outline:hover .ic-refresh{transform:rotate(35deg);}
+  .btn-outline.spinning .ic-refresh{transform:none;}
+  .btn-danger-outline{height:41px; padding:0 16px; border-radius:10px; border:1.5px solid var(--warn); background:white; color:var(--warn); font-weight:700; font-size:12.5px; cursor:pointer; transition: all .15s var(--ease);}
+  .btn-danger-outline:hover{background:var(--warn-bg); transform:translateY(-1px);}
+
+  .empty{text-align:center; padding:44px 10px; color:var(--ink-soft); font-size:13px;}
+  .empty .ic{font-size:30px; display:block; margin-bottom:10px; opacity:.5;}
+  .footnote{font-size:11px; color:#9aa8bd; text-align:center; padding:14px 0; display:flex; align-items:center; justify-content:center; gap:6px;}
+  .footnote .dot{width:5px; height:5px; border-radius:50%; background:var(--ok);}
+
+  /* Toasts */
+  #toastWrap{position:fixed; top:18px; right:18px; z-index:999; display:flex; flex-direction:column; gap:10px;}
+  .toast{
+    min-width:280px; max-width:340px; background:var(--card); border-radius:12px; box-shadow:var(--shadow-lg);
+    padding:14px 16px; display:flex; gap:10px; align-items:flex-start; border-left:4px solid var(--blue);
+    animation: toastIn .25s var(--ease);
+  }
+  .toast.success{border-left-color:var(--ok);}
+  .toast.error{border-left-color:var(--warn);}
+  .toast .ic{font-size:16px; margin-top:1px;}
+  .toast .msg{font-size:12.5px; font-weight:600; color:var(--ink); line-height:1.4;}
+  .toast .close{margin-left:auto; cursor:pointer; color:var(--ink-faint); font-size:14px; padding:2px;}
+
+  /* Confirm modal */
+  #confirmOverlay{position:fixed; inset:0; background:rgba(15,25,45,.45); backdrop-filter:blur(2px); z-index:998; display:none; align-items:center; justify-content:center; animation: fadeIn .2s;}
+  .confirm-box{background:white; border-radius:16px; padding:26px; width:360px; max-width:90vw; box-shadow:var(--shadow-lg); animation: popIn .25s var(--ease);}
+  .confirm-box h4{font-size:15px; font-weight:800;}
+  .confirm-box p{font-size:12.5px; color:var(--ink-soft); margin-top:8px; line-height:1.5;}
+  .confirm-actions{display:flex; gap:10px; margin-top:20px;}
+  .confirm-actions button{flex:1; height:40px; border-radius:10px; border:none; font-weight:700; font-size:12.5px; cursor:pointer; transition:all .15s var(--ease);}
+  .btn-cancel{background:var(--line-soft); color:var(--ink-soft);}
+  .btn-cancel:hover{background:var(--line);}
+  .btn-confirm{background:linear-gradient(135deg,var(--ok),#188549); color:white;}
+  .btn-confirm:hover{transform:translateY(-1px);}
+
+  /* ---------- INPUT DATA PRODUKSI ---------- */
+  .produksi-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(360px,1fr)); gap:16px;}
+  .produksi-card{display:flex; flex-direction:column;}
+  .produksi-card .link-row{display:flex; flex-direction:column; gap:8px; margin-top:12px;}
+  .produksi-card .link-input{width:100%; box-sizing:border-box; height:41px; border:1.5px solid var(--line); border-radius:10px; padding:0 12px; font-size:12.5px; background:#fbfcfe; text-overflow:ellipsis;}
+  .produksi-card .link-input:focus{outline:none; border-color:var(--blue); background:white; box-shadow:0 0 0 4px var(--blue-50);}
+  .produksi-card .btn-load{width:100%; justify-content:center; box-sizing:border-box; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .produksi-card .btn-sheet{width:100%; justify-content:center; box-sizing:border-box;}
+  .produksi-card h3{overflow-wrap:anywhere;}
+  .status-pill{display:inline-flex; align-items:center; gap:6px; padding:5px 11px; border-radius:20px; font-size:11px; font-weight:700; white-space:nowrap;}
+  .status-pill.on{background:var(--ok-bg); color:var(--ok);}
+  .status-pill.off{background:var(--line-soft); color:var(--ink-faint);}
+  .status-pill.err{background:var(--warn-bg); color:var(--warn);}
+  .sheet-summary{font-size:12px; color:var(--ink-soft); line-height:1.5;}
+  .sheet-summary b{color:var(--ink);}
+
+  .run-log{
+    background:var(--ink); color:#d7e6fb; border-radius:10px; padding:14px; font-size:11.5px;
+    font-family:'JetBrains Mono',monospace; max-height:260px; overflow-y:auto; white-space:pre-wrap; word-break:break-word;
+  }
+
+  #sheetModalOverlay{position:fixed; inset:0; background:rgba(15,25,45,.45); backdrop-filter:blur(2px); z-index:998; display:none; align-items:center; justify-content:center; animation: fadeIn .2s;}
+  .sheet-modal-box{width:420px; max-height:80vh; display:flex; flex-direction:column;}
+  .sheet-modal-list{margin-top:14px; overflow-y:auto; flex:1; border:1px solid var(--line); border-radius:10px; padding:6px;}
+  .sheet-check-row{display:flex; align-items:center; gap:10px; padding:9px 10px; border-radius:8px; cursor:pointer; font-size:13px; font-weight:600; color:var(--ink);}
+  .sheet-check-row:hover{background:var(--blue-50);}
+  .sheet-check-row input{width:16px; height:16px; accent-color:var(--blue); cursor:pointer;}
+</style>
+</head>
+<body>
+
+  <div id="toastWrap"></div>
+  <div id="confirmOverlay">
+    <div class="confirm-box">
+      <h4 id="confirmTitle">Konfirmasi</h4>
+      <p id="confirmMsg">Yakin ingin melanjutkan?</p>
+      <div class="confirm-actions">
+        <button class="btn-cancel" onclick="closeConfirm(false)">Batal</button>
+        <button class="btn-confirm" onclick="closeConfirm(true)">Ya, Lanjutkan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PILIH SHEET (checklist) -->
+  <div id="sheetModalOverlay">
+    <div class="confirm-box sheet-modal-box">
+      <h4 id="sheetModalTitle">Pilih Sheet</h4>
+      <p style="font-size:12.5px; color:var(--ink-soft); margin-top:6px;">Centang sheet/tab yang mau ditarik datanya. Daftar ini otomatis dari spreadsheet sumber — tidak perlu ketik manual.</p>
+      <div id="sheetModalList" class="sheet-modal-list"></div>
+      <div class="confirm-actions">
+        <button class="btn-cancel" onclick="closeSheetModal()">Batal</button>
+        <button class="btn-confirm" onclick="saveSheetSelection()">Simpan Pilihan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- LOGIN -->
+  <div id="loginScreen">
+    <div class="blob blob1"></div><div class="blob blob2"></div><div class="blob blob3"></div>
+    <div class="login-panel">
+      <div class="login-brand">
+        <div class="brand-mark"><span class="dot"></span> KSA SYSTEM</div>
+        <div>
+          <h1>Satu pintu untuk validasi produksi &amp; stok bahan baku.</h1>
+          <p>Terhubung langsung ke Spreadsheet lewat backend Python — real-time, tanpa refresh manual.</p>
+        </div>
+        <div class="brand-foot"><span class="live-dot"></span> Terhubung ke server lokal</div>
+      </div>
+      <div class="login-form">
+        <div class="eyebrow">Masuk</div>
+        <h2>Selamat datang kembali</h2>
+        <p class="sub">Masuk dengan akun yang terdaftar di sheet Login.</p>
+        <div class="field"><label>Username</label><input id="txt_user" placeholder="Masukkan username" onkeydown="if(event.key==='Enter')doLogin()"></div>
+        <div class="field"><label>Password</label><input id="txt_pass" type="password" placeholder="Masukkan password" onkeydown="if(event.key==='Enter')doLogin()"></div>
+        <button class="btn-primary" id="btnLogin" onclick="doLogin()">Masuk ke Sistem</button>
+        <div class="login-error" id="loginError"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- APP -->
+  <div id="app">
+    <div class="shell">
+      <div class="sidebar">
+        <div class="logo-row"><span class="dot"></span><span>KSA SYSTEM</span></div>
+        <div class="nav">
+          <div class="nav-item active" data-page="dashboard" onclick="go('dashboard', this)"><span class="ic">🏠</span> Dashboard</div>
+          <div class="nav-item" data-page="produksi" onclick="go('produksi', this)"><span class="ic">🏭</span> Input Data Produksi</div>
+          <div class="nav-item" onclick="toggleGroup('g-validasi')"><span class="ic">✅</span> Validasi</div>
+          <div class="nav-children open" id="g-validasi">
+            <div class="nav-child" data-page="rekap" onclick="go('rekap', this)">Rekap Data Validasi</div>
+            <div class="nav-child" data-page="validasi" onclick="go('validasi', this)">Data Validasi</div>
+          </div>
+          <div class="nav-item" onclick="toggleGroup('g-bahan')"><span class="ic">📦</span> Monitor Bahan Baku</div>
+          <div class="nav-children" id="g-bahan">
+            <div class="nav-child" data-page="updateStock" onclick="go('updateStock', this)">Update Stock</div>
+            <div class="nav-child" data-page="stockBahan" onclick="go('stockBahan', this)">Stock Bahan Baku</div>
+          </div>
+        </div>
+        <div class="user-box">
+          <div class="avatar" id="avatarInitial">-</div>
+          <div class="user-meta"><div class="name" id="user_display">-</div><div class="role" id="role_display">-</div></div>
+          <button onclick="doLogout()">Keluar Sistem</button>
+        </div>
+      </div>
+
+      <div class="main">
+        <div class="topbar">
+          <h2 id="pageTitle">Dashboard</h2>
+          <div class="live-pill"><span class="blip"></span> Live Data</div>
+        </div>
+        <div class="content" id="content">
+
+          <div class="page" id="page-dashboard" style="display:block">
+            <div class="stat-grid">
+              <div class="stat"><div class="label">Selisih Belum OK</div><div class="value" id="statSelisih">–</div></div>
+              <div class="stat"><div class="label">Total JO di Sheet</div><div class="value" id="statTotal">–</div></div>
+              <div class="stat"><div class="label">Menunggu ACC</div><div class="value" id="statAcc">–</div></div>
+            </div>
+            <div class="card"><h3>Selamat datang, <span id="nama_dashboard"></span> 👋</h3>
+              <p style="color:var(--ink-soft); font-size:13px; margin-top:6px;">Role: <span id="role_dashboard"></span></p></div>
+          </div>
+
+          <div class="page" id="page-produksi" style="display:none">
+            <div class="card">
+              <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+                <div>
+                  <h3>Input Data Produksi</h3>
+                  <p class="desc" style="font-size:12.5px; color:var(--ink-soft); margin-top:4px;">
+                    Sambungkan link spreadsheet/Excel tiap mesin, centang sheet/tab bulan yang mau ditarik,
+                    lalu jalankan semuanya lewat satu tombol Refresh di bawah — tidak perlu refresh satu-satu.
+                  </p>
+                </div>
+                <button class="btn-outline" id="btnRunAll" style="border-color:var(--ok); color:var(--ok); white-space:nowrap;" onclick="doRunAll()">
+                  <svg class="ic ic-refresh" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><polyline points="21 3 21 9 15 9"/></svg>
+                  Refresh Semua (Run All)
+                </button>
+              </div>
+              <div id="runAllPanel" style="display:none; margin-top:16px;">
+                <div id="runAllStatusLine" style="font-size:12.5px; font-weight:700; color:var(--blue-dark); margin-bottom:8px;"></div>
+                <pre id="runAllLog" class="run-log"></pre>
+              </div>
+            </div>
+
+            <div class="produksi-grid" id="produksiGrid">
+              <!-- kartu tiap source dirender lewat JS, lihat renderProduksiCards() -->
+            </div>
+          </div>
+
+          <div class="page" id="page-rekap" style="display:none">
+            <div class="card">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:10px;">
+                <h3>Rekap Data Selisih</h3>
+                <div style="display:flex; gap:10px; align-items:center;">
+                  <select id="picDropdown" style="height:41px; border:1.5px solid var(--line); border-radius:10px; padding:0 12px; background:white;"><option value="">Pilih PIC</option></select>
+                  <button class="btn-outline" id="btnRefreshRekap" onclick="loadRekap(true)"><svg class="ic ic-refresh" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><polyline points="21 3 21 9 15 9"/></svg> Refresh</button>
+                </div>
+              </div>
+              <div class="table-wrap">
+              <table>
+                <thead><tr><th>Tanggal</th><th>JO</th><th>Nama</th><th>Order</th><th>Slitting</th><th>Total</th><th>Selisih</th><th>Konfirmasi</th></tr></thead>
+                <tbody id="tblRekap"></tbody>
+              </table>
+              </div>
+            </div>
+          </div>
+
+          <div class="page" id="page-validasi" style="display:none">
+            <div class="card">
+              <h3>Data Validasi</h3>
+              <div class="toolbar" style="margin-top:16px">
+                <div class="search-wrap"><span class="ic">🔍</span><input id="txtCariValidasi" placeholder="Cari JO / Nama..." onkeyup="renderValidasi()"></div>
+                <button class="btn-danger-outline" onclick="document.getElementById('txtCariValidasi').value='';renderValidasi()">✖ Reset</button>
+                <button class="btn-outline" id="btnRefreshValidasi" onclick="loadValidasi(true)"><svg class="ic ic-refresh" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><polyline points="21 3 21 9 15 9"/></svg> Refresh</button>
+              </div>
+              <div class="table-wrap">
+              <table>
+                <thead><tr><th>Tanggal</th><th>JO</th><th>Nama</th><th>Order</th><th>Slitting</th><th>Bag</th><th>Validasi</th><th>Serah Terima</th><th>Total</th><th>Selisih</th></tr></thead>
+                <tbody id="tblValidasi"></tbody>
+              </table>
+              </div>
+            </div>
+          </div>
+
+          <div class="page" id="page-updateStock" style="display:none">
+            <div class="card">
+              <h3>Update Stock Bahan Baku</h3>
+              <div class="toolbar" style="margin-top:16px">
+                <div class="search-wrap"><span class="ic">🔍</span><input id="txtCariUpdateStock" placeholder="Cari JO / Nama..." onkeyup="renderUpdateStock()"></div>
+                <button class="btn-danger-outline" onclick="document.getElementById('txtCariUpdateStock').value='';renderUpdateStock()">✖ Reset</button>
+                <button class="btn-outline" id="btnRefreshUpdateStock" onclick="loadUpdateStock(true)"><svg class="ic ic-refresh" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><polyline points="21 3 21 9 15 9"/></svg> Refresh</button>
+              </div>
+              <div class="table-wrap">
+              <table>
+                <thead><tr><th>JO</th><th>Nama</th><th>Order</th><th>Meter Order</th><th>Meter Validasi</th><th>Lapisan Order</th><th>Lapisan Validasi</th><th>ACC</th></tr></thead>
+                <tbody id="tblUpdateStock"></tbody>
+              </table>
+              </div>
+            </div>
+          </div>
+
+          <div class="page" id="page-stockBahan" style="display:none">
+            <div class="card">
+              <h3>Stock Bahan Baku</h3>
+              <div class="toolbar" style="margin-top:16px">
+                <div class="search-wrap"><span class="ic">🔍</span><input id="txtCariStockBahan" placeholder="Cari JO / Nama..." onkeyup="renderStockBahan()"></div>
+                <button class="btn-danger-outline" onclick="document.getElementById('txtCariStockBahan').value='';renderStockBahan()">✖ Reset</button>
+                <button class="btn-outline" id="btnRefreshStockBahan" onclick="loadStockBahan(true)"><svg class="ic ic-refresh" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><polyline points="21 3 21 9 15 9"/></svg> Refresh</button>
+              </div>
+              <div class="table-wrap">
+              <table>
+                <thead><tr><th>Tanggal</th><th>User</th><th>JO</th><th>Nama</th><th>Order</th><th>Meter Order</th><th>Meter Validasi</th><th>Lapisan Order</th><th>Lapisan Validasi</th></tr></thead>
+                <tbody id="tblStockBahan"></tbody>
+              </table>
+              </div>
+            </div>
+          </div>
+
+        </div>
+        <div class="footnote"><span class="dot"></span> Terhubung ke <span id="apiBaseLabel"></span></div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  const API_BASE = "http://localhost:5000"; // ganti kalau backend sudah online
+  document.getElementById("apiBaseLabel").innerText = API_BASE;
+
+  let currentUser = null;
+  let dataValidasi = [], dataUpdateStock = [], dataStockBahan = [];
+
+  // ---------------- TOAST ----------------
+  function toast(msg, type="info"){
+    const icons = { success:"✅", error:"⚠️", info:"ℹ️" };
+    const wrap = document.getElementById("toastWrap");
+    const el = document.createElement("div");
+    el.className = `toast ${type}`;
+    el.innerHTML = `<span class="ic">${icons[type]||icons.info}</span><span class="msg">${msg}</span><span class="close" onclick="this.parentElement.remove()">✕</span>`;
+    wrap.appendChild(el);
+    setTimeout(()=>{ el.style.opacity="0"; el.style.transform="translateX(24px)"; el.style.transition="all .25s"; setTimeout(()=>el.remove(), 260); }, 3800);
+  }
+
+  // ---------------- CONFIRM MODAL ----------------
+  let confirmResolver = null;
+  function askConfirm(title, msg){
+    document.getElementById("confirmTitle").innerText = title;
+    document.getElementById("confirmMsg").innerText = msg;
+    document.getElementById("confirmOverlay").style.display = "flex";
+    return new Promise(resolve => { confirmResolver = resolve; });
+  }
+  function closeConfirm(result){
+    document.getElementById("confirmOverlay").style.display = "none";
+    if(confirmResolver) confirmResolver(result);
+    confirmResolver = null;
+  }
+
+  // ---------------- SKELETON ----------------
+  function skeletonRows(cols, rows=4){
+    let html = "";
+    for(let i=0;i<rows;i++){
+      html += "<tr>" + Array(cols).fill(0).map(()=>`<td><div class="skeleton" style="height:13px; width:${60+Math.random()*30}%;"></div></td>`).join("") + "</tr>";
+    }
+    return html;
+  }
+  function emptyState(colspan, text, icon="📭"){
+    return `<tr><td colspan="${colspan}"><div class="empty"><span class="ic">${icon}</span>${text}</div></td></tr>`;
+  }
+
+  // ---------------- LOGIN / LOGOUT ----------------
+  async function doLogin(){
+    const username = document.getElementById("txt_user").value.trim();
+    const password = document.getElementById("txt_pass").value.trim();
+    const errEl = document.getElementById("loginError");
+    const btn = document.getElementById("btnLogin");
+    errEl.innerText = "";
+    if(!username || !password){ errEl.innerText = "Isi username dan password"; return; }
+
+    btn.disabled = true; btn.innerHTML = `<span class="spinner"></span>Memproses...`;
+    try{
+      const res = await fetch(`${API_BASE}/api/login`, {
+        method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({username, password})
+      });
+      const data = await res.json();
+      if(data.status === "SUKSES"){
+        currentUser = data;
+        document.getElementById("loginScreen").style.display = "none";
+        document.getElementById("app").style.display = "block";
+        document.getElementById("user_display").innerText = data.nama;
+        document.getElementById("role_display").innerText = data.role;
+        document.getElementById("nama_dashboard").innerText = data.nama;
+        document.getElementById("role_dashboard").innerText = data.role;
+        document.getElementById("avatarInitial").innerText = (data.nama||"?").trim().charAt(0).toUpperCase();
+        toast(`Selamat datang, ${data.nama}!`, "success");
+        loadDashboardStats();
+      } else {
+        errEl.innerText = data.pesan || "Login gagal";
+      }
+    } catch(e){
+      errEl.innerText = "Tidak bisa menghubungi server. Pastikan python app.py sedang jalan.";
+    } finally {
+      btn.disabled = false; btn.innerText = "Masuk ke Sistem";
+    }
+  }
+
+  function doLogout(){
+    currentUser = null;
+    document.getElementById("app").style.display = "none";
+    document.getElementById("loginScreen").style.display = "flex";
+    document.getElementById("txt_user").value = "";
+    document.getElementById("txt_pass").value = "";
+  }
+
+  // ---------------- NAVIGASI ----------------
+  function toggleGroup(id){ document.getElementById(id).classList.toggle("open"); }
+
+  function go(page, el){
+    document.querySelectorAll(".nav-item, .nav-child").forEach(n=>n.classList.remove("active"));
+    el.classList.add("active");
+    document.querySelectorAll(".page").forEach(p=>p.style.display="none");
+    const pg = document.getElementById("page-"+page);
+    pg.style.display="block"; pg.style.animation="none"; pg.offsetHeight; pg.style.animation="fadeUp .3s var(--ease)";
+    const titles = { dashboard:"Dashboard", produksi:"Input Data Produksi", rekap:"Rekap Data Validasi", validasi:"Data Validasi", updateStock:"Update Stock Bahan Baku", stockBahan:"Stock Bahan Baku" };
+    document.getElementById("pageTitle").innerText = titles[page];
+    if(page === "produksi") loadProduksiSources();
+    if(page === "validasi") loadValidasi();
+    if(page === "rekap"){ loadPIC(); loadRekap(); }
+    if(page === "updateStock") loadUpdateStock();
+    if(page === "stockBahan") loadStockBahan();
+  }
+
+  async function loadDashboardStats(){
+    try{
+      const [vRes, uRes] = await Promise.all([fetch(`${API_BASE}/api/validasi`), fetch(`${API_BASE}/api/update-stock`)]);
+      const v = await vRes.json(); const u = await uRes.json();
+      document.getElementById("statSelisih").innerText = v.filter(r=>Number(r.selisih)!==0 && String(r.status||"").toUpperCase().trim()!=="OK").length;
+      document.getElementById("statTotal").innerText = v.length;
+      document.getElementById("statAcc").innerText = u.filter(r=>!r.isLocked).length;
+    } catch(e){}
+  }
+
+  // ---------------- VALIDASI ----------------
+  async function loadValidasi(spin){
+    const tbody = document.getElementById("tblValidasi");
+    const btn = document.getElementById("btnRefreshValidasi");
+    if(spin && btn) btn.classList.add("spinning");
+    tbody.innerHTML = skeletonRows(10);
+    try{
+      const res = await fetch(`${API_BASE}/api/validasi`);
+      dataValidasi = await res.json();
+      renderValidasi();
+      if(spin) toast("Data validasi diperbarui", "success");
+    } catch(e){
+      tbody.innerHTML = emptyState(10, "Gagal memuat data. Cek koneksi server.", "⚠️");
+    } finally { if(btn) btn.classList.remove("spinning"); }
+  }
+  function renderValidasi(){
+    const keyword = (document.getElementById("txtCariValidasi").value || "").toLowerCase();
+    let rows = dataValidasi.filter(r => String(r.jo||"").toLowerCase().includes(keyword) || String(r.nama||"").toLowerCase().includes(keyword));
+    if(rows.length === 0){ document.getElementById("tblValidasi").innerHTML = emptyState(10, "Tidak ada data ditemukan"); return; }
+    let html = "";
+    rows.forEach((r,i)=>{
+      const cls = Number(r.selisih) !== 0 ? "row-selisih" : "";
+      html += `<tr class="${cls} row-in" style="animation-delay:${Math.min(i*22,300)}ms">
+        <td>${r.tanggal||""}</td><td>${r.jo||""}</td><td>${r.nama||""}</td><td>${r.order||""}</td>
+        <td>${r.slitting||""}</td><td>${r.hasilBag||""}</td><td>${r.validasi||""}</td>
+        <td>${r.serahTerima||""}</td><td>${r.total||""}</td>
+        <td style="font-weight:${Number(r.selisih)!==0?'700':'400'}; color:${Number(r.selisih)!==0?'var(--warn)':'inherit'}">${r.selisih}</td>
+      </tr>`;
+    });
+    document.getElementById("tblValidasi").innerHTML = html;
+  }
+
+  // ---------------- REKAP ----------------
+  async function loadRekap(spin){
+    const tbody = document.getElementById("tblRekap");
+    const btn = document.getElementById("btnRefreshRekap");
+    if(spin && btn) btn.classList.add("spinning");
+    tbody.innerHTML = skeletonRows(8);
+    try{
+      const res = await fetch(`${API_BASE}/api/validasi`);
+      const data = await res.json();
+      const belumOk = data.filter(r => Number(r.selisih) !== 0 && String(r.status||"").toUpperCase().trim() !== "OK");
+      if(belumOk.length === 0){ tbody.innerHTML = emptyState(8, "Tidak ada selisih — semua aman 🎉", "🎉"); return; }
+      let html = "";
+      belumOk.forEach((r,i)=>{
+        html += `<tr class="row-in" style="animation-delay:${Math.min(i*22,300)}ms">
+          <td>${r.tanggal||""}</td><td>${r.jo||""}</td><td>${r.nama||""}</td><td>${r.order||""}</td>
+          <td>${r.slitting||""}</td><td>${r.total||""}</td>
+          <td style="font-weight:700; color:var(--warn)">${r.selisih}</td>
+          <td><button class="btn-mini wa" onclick='kirimWA(${JSON.stringify(r)})'>📩 Kirim Pesan</button></td>
+        </tr>`;
+      });
+      tbody.innerHTML = html;
+      if(spin) toast("Rekap diperbarui", "success");
+    } catch(e){
+      tbody.innerHTML = emptyState(8, "Gagal memuat data.", "⚠️");
+    } finally { if(btn) btn.classList.remove("spinning"); }
+  }
+
+  async function loadPIC(){
+    try{
+      const res = await fetch(`${API_BASE}/api/pic`);
+      const data = await res.json();
+      let html = '<option value="">Pilih PIC</option>';
+      data.forEach(p => html += `<option value="${p.nomor}">${p.nama} - ${p.nomor}</option>`);
+      document.getElementById("picDropdown").innerHTML = html;
+    } catch(e){}
+  }
+
+  function kirimWA(r){
+    const nomor = document.getElementById("picDropdown").value;
+    if(!nomor){ toast("Pilih PIC terlebih dahulu", "error"); return; }
+    const statusSelisih = Number(r.selisih) > 0 ? "Lebih " + r.selisih : "Kurang " + r.selisih;
+    const pesan = `Assalamualaikum Pak\n\nJO : ${r.jo}\nNama : ${r.nama}\nOrder : ${r.order}\nSlitting : ${r.slitting}\nTotal : ${r.total}\nSelisih : ${statusSelisih}\nMinta tolong dicek Pak\n\nTerima kasih`;
+    window.open("https://wa.me/" + nomor + "?text=" + encodeURIComponent(pesan), "_blank");
+  }
+
+  // ---------------- UPDATE STOCK ----------------
+  async function loadUpdateStock(spin){
+    const tbody = document.getElementById("tblUpdateStock");
+    const btn = document.getElementById("btnRefreshUpdateStock");
+    if(spin && btn) btn.classList.add("spinning");
+    tbody.innerHTML = skeletonRows(8);
+    try{
+      const res = await fetch(`${API_BASE}/api/update-stock`);
+      dataUpdateStock = await res.json();
+      renderUpdateStock();
+      if(spin) toast("Data update stock diperbarui", "success");
+    } catch(e){
+      tbody.innerHTML = emptyState(8, "Gagal memuat data.", "⚠️");
+    } finally { if(btn) btn.classList.remove("spinning"); }
+  }
+  function renderUpdateStock(){
+    const keyword = (document.getElementById("txtCariUpdateStock").value || "").toLowerCase();
+    let rows = dataUpdateStock.filter(r => String(r.jo||"").toLowerCase().includes(keyword) || String(r.nama||"").toLowerCase().includes(keyword));
+    if(rows.length === 0){ document.getElementById("tblUpdateStock").innerHTML = emptyState(8, "Tidak ada data"); return; }
+    let html = "";
+    rows.forEach((r,i)=>{
+      const accCell = r.isLocked ? `<span class="check-acc">✓</span>` : `<button class="btn-mini acc" onclick='kirimAcc(${JSON.stringify(r)})'>ACC &amp; Kirim</button>`;
+      html += `<tr class="row-in" style="animation-delay:${Math.min(i*22,300)}ms">
+        <td>${r.jo||""}</td><td>${r.nama||""}</td><td>${r.order||""}</td>
+        <td>${r.meterOrder||""}</td><td>${r.meterValidasi||""}</td>
+        <td>${r.lapisanOrder||""}</td><td>${r.lapisanValidasi||""}</td>
+        <td style="text-align:center">${accCell}</td>
+      </tr>`;
+    });
+    document.getElementById("tblUpdateStock").innerHTML = html;
+  }
+
+  async function kirimAcc(row){
+    const ok = await askConfirm("ACC & Kirim Data", `Kirim data JO ${row.jo} ke Stock Bahan Baku? Data akan terkunci setelah ini.`);
+    if(!ok) return;
+    try{
+      const res = await fetch(`${API_BASE}/api/update-stock/acc`, {
+        method:"POST", headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({...row, user: currentUser ? currentUser.nama : "Tidak diketahui"})
+      });
+      const result = await res.json();
+      if(result.success){
+        toast(`JO ${row.jo} berhasil di-ACC`, "success");
+        loadUpdateStock(); loadStockBahan();
+      } else {
+        toast("Gagal: " + (result.message || "unknown error"), "error");
+      }
+    } catch(e){ toast("Error: " + e.message, "error"); }
+  }
+
+  // ---------------- STOCK BAHAN ----------------
+  async function loadStockBahan(spin){
+    const tbody = document.getElementById("tblStockBahan");
+    const btn = document.getElementById("btnRefreshStockBahan");
+    if(spin && btn) btn.classList.add("spinning");
+    tbody.innerHTML = skeletonRows(9);
+    try{
+      const res = await fetch(`${API_BASE}/api/stock-bahan`);
+      dataStockBahan = await res.json();
+      renderStockBahan();
+      if(spin) toast("Stock bahan diperbarui", "success");
+    } catch(e){
+      tbody.innerHTML = emptyState(9, "Gagal memuat data.", "⚠️");
+    } finally { if(btn) btn.classList.remove("spinning"); }
+  }
+  function renderStockBahan(){
+    const keyword = (document.getElementById("txtCariStockBahan").value || "").toLowerCase();
+    let rows = dataStockBahan.filter(r => String(r.jo||"").toLowerCase().includes(keyword) || String(r.nama||"").toLowerCase().includes(keyword));
+    if(rows.length === 0){ document.getElementById("tblStockBahan").innerHTML = emptyState(9, "Belum ada data ACC"); return; }
+    let html = "";
+    rows.forEach((r,i)=>{
+      html += `<tr class="row-in" style="animation-delay:${Math.min(i*22,300)}ms">
+        <td>${r.tanggal||""}</td><td><b>${r.user||""}</b></td><td>${r.jo||""}</td><td>${r.nama||""}</td>
+        <td>${r.order||""}</td><td>${r.meterOrder||""}</td><td>${r.meterValidasi||""}</td>
+        <td>${r.lapisanOrder||""}</td><td>${r.lapisanValidasi||""}</td>
+      </tr>`;
+    });
+    document.getElementById("tblStockBahan").innerHTML = html;
+  }
+
+  // ================= INPUT DATA PRODUKSI =================
+  let produksiSources = {};   // cache terakhir dari /api/produksi/sources
+  let detectedSheetsCache = {}; // { source_key: [nama sheet hasil deteksi terakhir] }
+  let activeSheetModalKey = null;
+  let runAllPollTimer = null;
+
+  async function loadProduksiSources(){
+    const grid = document.getElementById("produksiGrid");
+    grid.innerHTML = `<div class="card" style="grid-column:1/-1"><div class="skeleton" style="height:70px;"></div></div>`;
+    try{
+      const res = await fetch(`${API_BASE}/api/produksi/sources`);
+      produksiSources = await res.json();
+      renderProduksiCards();
+    } catch(e){
+      grid.innerHTML = `<div class="card" style="grid-column:1/-1"><div class="empty"><span class="ic">⚠️</span>Gagal memuat daftar source. Pastikan backend jalan.</div></div>`;
+    }
+  }
+
+  function sourceStatusPill(src){
+    if(src.last_status === "ERROR") return `<div class="status-pill err">🔴 Error</div>`;
+    if(src.source_id) return `<div class="status-pill on">🟢 Connected</div>`;
+    return `<div class="status-pill off">⚪ Belum terhubung</div>`;
+  }
+
+  function renderProduksiCards(){
+    const grid = document.getElementById("produksiGrid");
+    const keys = Object.keys(produksiSources);
+    if(keys.length === 0){ grid.innerHTML = `<div class="card" style="grid-column:1/-1"><div class="empty">Belum ada source dikonfigurasi.</div></div>`; return; }
+
+    let html = "";
+    keys.forEach(key => {
+      const src = produksiSources[key];
+      const sheetCount = (src.sheets || []).length;
+      const sheetSummary = sheetCount ? `<b>${sheetCount}</b> sheet dicentang: ${src.sheets.join(", ")}` : `Belum ada sheet dicentang`;
+      const lastImportLine = src.last_import
+        ? `Terakhir import: ${src.last_import} — ${src.last_status === "OK" ? `✅ ${src.last_rows ?? 0} baris` : `⚠️ ${src.last_error || "gagal"}`}`
+        : `Belum pernah di-import`;
+
+      html += `
+        <div class="card produksi-card" style="margin-bottom:0;">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px;">
+            <h3>${sourceIcon(key)} ${src.label}</h3>
+            ${sourceStatusPill(src)}
+          </div>
+          <div style="font-size:11px; color:var(--ink-faint); margin-top:2px;">${src.source_name || (src.source_id ? src.source_id : "Belum ada link")}</div>
+          <div class="link-row">
+            <input class="link-input" id="link-${key}" placeholder="Paste link spreadsheet / Excel Drive...">
+            <button class="btn-outline btn-load" onclick="doLoadSource('${key}')" id="btnLoad-${key}">Load</button>
+          </div>
+          <div style="display:flex; gap:10px; align-items:center; margin-top:10px; flex-wrap:wrap;">
+            <button class="btn-outline btn-sheet" onclick="openSheetModal('${key}')">📋 Pilih Sheet</button>
+          </div>
+          <div class="sheet-summary" style="margin-top:8px;">${sheetSummary}</div>
+          <div style="font-size:11px; color:var(--ink-faint); margin-top:8px;">${lastImportLine}</div>
+        </div>`;
+    });
+    grid.innerHTML = html;
+  }
+
+  function sourceIcon(key){
+    if(key.startsWith("printing")) return "🏭";
+    if(key.startsWith("dry")) return "🌬️";
+    if(key === "rw") return "🔄";
+    if(key === "sl") return "✂️";
+    if(key === "sf") return "📎";
+    if(key === "ex") return "🧪";
+    return "📄";
+  }
+
+  async function doLoadSource(key){
+    const input = document.getElementById(`link-${key}`);
+    const link = (input.value || "").trim();
+    if(!link){ toast("Paste link spreadsheet dulu", "error"); return; }
+    const btn = document.getElementById(`btnLoad-${key}`);
+    btn.disabled = true; const originalText = btn.innerText; btn.innerText = "Menghubungkan...";
+    try{
+      const res = await fetch(`${API_BASE}/api/produksi/load`, {
+        method:"POST", headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({ source_key: key, link })
+      });
+      const data = await res.json();
+      if(data.success){
+        detectedSheetsCache[key] = data.detected_sheets;
+        produksiSources[key].source_id = data.source_id;
+        produksiSources[key].source_name = data.file_name;
+        renderProduksiCards();
+        toast(`Terhubung ke "${data.file_name}" — ${data.detected_sheets.length} sheet terdeteksi`, "success");
+        openSheetModal(key); // langsung buka checklist biar user cepat pilih
+      } else {
+        toast(data.message || "Gagal terhubung", "error");
+      }
+    } catch(e){
+      toast("Error: " + e.message, "error");
+    } finally {
+      btn.disabled = false; btn.innerText = originalText;
+    }
+  }
+
+  async function openSheetModal(key){
+    activeSheetModalKey = key;
+    const src = produksiSources[key];
+    document.getElementById("sheetModalTitle").innerText = `Pilih Sheet — ${src.label}`;
+    const listEl = document.getElementById("sheetModalList");
+
+    let names = detectedSheetsCache[key];
+    if(!names){
+      listEl.innerHTML = `<div class="empty" style="padding:20px 8px;">Klik "Load" dulu untuk mendeteksi sheet dari link spreadsheet.</div>`;
+      document.getElementById("sheetModalOverlay").style.display = "flex";
+      return;
+    }
+
+    const selected = new Set(src.sheets || []);
+    listEl.innerHTML = names.map(name => `
+      <label class="sheet-check-row">
+        <input type="checkbox" value="${name}" ${selected.has(name) ? "checked" : ""}>
+        <span>${name}</span>
+      </label>
+    `).join("");
+    document.getElementById("sheetModalOverlay").style.display = "flex";
+  }
+
+  function closeSheetModal(){
+    document.getElementById("sheetModalOverlay").style.display = "none";
+    activeSheetModalKey = null;
+  }
+
+  async function saveSheetSelection(){
+    if(!activeSheetModalKey) return;
+    const key = activeSheetModalKey;
+    const checked = Array.from(document.querySelectorAll("#sheetModalList input[type=checkbox]:checked")).map(el => el.value);
+    try{
+      const res = await fetch(`${API_BASE}/api/produksi/sheets`, {
+        method:"POST", headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({ source_key: key, sheets: checked })
+      });
+      const data = await res.json();
+      if(data.success){
+        produksiSources[key].sheets = checked;
+        renderProduksiCards();
+        toast(`Sheet untuk "${produksiSources[key].label}" disimpan (${checked.length} dipilih)`, "success");
+        closeSheetModal();
+      } else {
+        toast(data.message || "Gagal menyimpan pilihan sheet", "error");
+      }
+    } catch(e){
+      toast("Error: " + e.message, "error");
+    }
+  }
+
+  // ---- Refresh Semua (Run All) — satu tombol, jalan di background lewat Flask ----
+  async function doRunAll(){
+    const btn = document.getElementById("btnRunAll");
+    const panel = document.getElementById("runAllPanel");
+    const statusLine = document.getElementById("runAllStatusLine");
+    const logEl = document.getElementById("runAllLog");
+
+    try{
+      const res = await fetch(`${API_BASE}/api/produksi/run-all`, { method:"POST" });
+      const data = await res.json();
+      if(!data.success){
+        toast(data.message || "Sedang berjalan", "error");
+        return;
+      }
+      btn.disabled = true; btn.classList.add("spinning");
+      panel.style.display = "block";
+      statusLine.innerText = "⏳ Sedang berjalan... (tiap script diberi jeda ±30 detik supaya tidak kena limit Google Sheets)";
+      logEl.textContent = "";
+      toast("Refresh Semua dimulai", "success");
+      if(runAllPollTimer) clearInterval(runAllPollTimer);
+      runAllPollTimer = setInterval(pollRunStatus, 2000);
+      pollRunStatus();
+    } catch(e){
+      toast("Error: " + e.message, "error");
+    }
+  }
+
+  async function pollRunStatus(){
+    const btn = document.getElementById("btnRunAll");
+    const statusLine = document.getElementById("runAllStatusLine");
+    const logEl = document.getElementById("runAllLog");
+    try{
+      const res = await fetch(`${API_BASE}/api/produksi/run-status`);
+      const st = await res.json();
+      logEl.textContent = st.log || "";
+      logEl.scrollTop = logEl.scrollHeight;
+      if(!st.running){
+        clearInterval(runAllPollTimer); runAllPollTimer = null;
+        btn.disabled = false; btn.classList.remove("spinning");
+        statusLine.innerText = st.returncode === 0
+          ? `✅ Selesai — ${st.finished_at || ""}`
+          : `⚠️ Selesai dengan masalah (exit code ${st.returncode}) — ${st.finished_at || ""}`;
+        toast(st.returncode === 0 ? "Refresh Semua selesai" : "Refresh selesai, ada script yang gagal — cek log", st.returncode === 0 ? "success" : "error");
+        loadProduksiSources(); // muat ulang status per-card (last_import, last_status, dst.)
+      }
+    } catch(e){ /* diamkan, coba lagi di polling berikutnya */ }
+  }
+</script>
+</body>
+</html>

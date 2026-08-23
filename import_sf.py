@@ -1,0 +1,22 @@
+"""
+import_sf.py — lihat catatan di import_printing_2.py.
+"""
+
+from import_engine import run_gsheet_import
+
+SOURCE_KEY = "sf"
+TARGET_SHEET_NAME = "SF_1"
+
+TARGET_HEADERS = [
+    "TANGGAL", "SHIFT/OPERATOR", "JAM_AWAL", "JAM_AKHIR", "SPK", "JO", "NAMA_PRODUK",
+    "LAP1/LAP2", "HPREW_NO_BAHAN", "HPREW_NO", "HPREW_METER", "HPREW_KG",
+    "LAPISAN_JENIS", "LAPISAN_BERAT_JENIS", "LAPISAN_MIC", "LAPISAN_UKURAN",
+    "LAPISAN_METER", "LAPISAN_KG", "LAPISAN_NO_BAHAN", "HASIL_PRODUKSI_NO",
+    "HASIL_PRODUKSI_METER", "HASIL_PRODUKSI_KG", "HASIL_PRODUKSI_JAM_TURUN",
+    "WASTE", "KETERANGAN_WASTE"
+]
+
+HEADER_KEYWORDS = ["TANGGAL", "SHIFT/OPERATOR", "JO", "SPK"]
+
+if __name__ == "__main__":
+    run_gsheet_import(SOURCE_KEY, TARGET_SHEET_NAME, TARGET_HEADERS, HEADER_KEYWORDS)

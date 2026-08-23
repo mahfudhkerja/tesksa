@@ -1,0 +1,50 @@
+name: Refresh Import KSA System
+
+on:
+  schedule:
+    # Jalan tiap hari jam 06:00 WIB (23:00 UTC hari sebelumnya).
+    # Ubah sesuai kebutuhan: https://crontab.guru
+    - cron: '0 23 * * *'
+  workflow_dispatch: {}  # supaya bisa dipicu manual dari tab Actions
+
+jobs:
+  trigger-refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Bangunkan & mulai run-all di backend
+        run: |
+          echo "Memicu /api/produksi/run-all ..."
+          HTTP_CODE=$(curl -s -o /tmp/trigger.json -w "%{http_code}" -X POST \
+            "${{ secrets.RENDER_URL }}/api/produksi/run-all" \
+            --max-time 90)
+          cat /tmp/trigger.json
+          echo "HTTP status: $HTTP_CODE"
+          if [ "$HTTP_CODE" != "200" ] && [ "$HTTP_CODE" != "409" ]; then
+            echo "::error::Gagal memicu run-all (HTTP $HTTP_CODE)"
+            exit 1
+          fi
+
+      - name: Polling status sampai selesai
+        run: |
+          for i in $(seq 1 60); do   # maks ~15 menit (60 x 15s)
+            sleep 15
+            STATUS=$(curl -s --max-time 30 "${{ secrets.RENDER_URL }}/api/produksi/run-status")
+            echo "$STATUS" > /tmp/status.json
+            RUNNING=$(echo "$STATUS" | python3 -c "import sys,json; print(json.load(sys.stdin).get('running'))")
+            if [ "$RUNNING" = "False" ]; then
+              echo "Selesai."
+              break
+            fi
+            echo "Masih berjalan... ($i)"
+          done
+
+      - name: Tampilkan log & cek hasil
+        run: |
+          echo "===== LOG run_all.py ====="
+          python3 -c "import json; print(json.load(open('/tmp/status.json')).get('log',''))"
+          RETURNCODE=$(python3 -c "import json; print(json.load(open('/tmp/status.json')).get('returncode'))")
+          echo "Return code: $RETURNCODE"
+          if [ "$RETURNCODE" != "0" ]; then
+            echo "::error::run_all.py selesai dengan error (exit $RETURNCODE)"
+            exit 1
+          fi
