@@ -1,0 +1,16 @@
+# JANGAN pernah commit ini — service account key
+credentials.json
+
+# environment lokal
+.env
+venv/
+__pycache__/
+*.pyc
+
+# config.json BOLEH dicommit sebagai baseline (isi source_id kosong),
+# tapi kalau kamu sering ubah source lewat halaman Input Data, sadari
+# bahwa di Render free tier filesystem sifatnya ephemeral — perubahan
+# config.json lewat UI bisa hilang saat service redeploy/restart.
+# Kalau mau lebih aman, uncomment baris di bawah lalu simpan config.json
+# terpisah (mis. commit manual tiap kali habis Load/Pilih Sheet).
+# config.json
