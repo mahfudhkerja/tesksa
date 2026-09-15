@@ -260,8 +260,7 @@
   .produksi-card .btn-load{width:100%; justify-content:center; box-sizing:border-box; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
   .produksi-card .btn-sheet{width:100%; justify-content:center; box-sizing:border-box;}
   .produksi-card h3{overflow-wrap:anywhere;}
-  /* Rewind Kecil — tombol refresh import (halaman Waste Rewind) */
-  .rwk-refresh-btn{white-space:nowrap;}
+  /* Rewind Kecil — status refresh gabungan (halaman Waste Rewind) */
   .rwk-status{font-size:11px; color:var(--ink-faint); margin:8px 0 2px;}
   .gudang-pick-list{display:flex; flex-direction:column; gap:6px; max-width:680px;}
   .gudang-pick-item{display:flex; justify-content:space-between; align-items:center; gap:10px; padding:9px 12px; border:1.5px solid var(--line); border-radius:10px; background:#fbfcfe; cursor:pointer; font-size:12.5px; transition:border-color .15s var(--ease), background .15s var(--ease);}
@@ -1063,11 +1062,10 @@
               <div class="wrw-toolbar">
                 <div class="wrw-search"><span class="ic">🔍</span><input id="wrwSearch" placeholder="Cari JO / SPK / Produk..." oninput="renderWasteRewind()"></div>
                 <button class="btn-danger-outline" onclick="document.getElementById('wrwSearch').value='';renderWasteRewind()">✖ Reset</button>
-                <button class="btn-outline" id="wrwRefreshBtn" onclick="loadWasteRewind(true)" title="Muat ulang tampilan dari sheet REWIND_PY"><svg class="ic ic-refresh" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><polyline points="21 3 21 9 15 9"/></svg> Refresh</button>
-                <button class="btn-outline rwk-refresh-btn" id="btnRefreshRewindKecil" onclick="runRewindKecil()" title="Tarik ulang data mentah dari sumber (import_rewind_kecil.py) ke sheet REWIND">↻ Refresh Import Rewind Kecil</button>
+                <button class="btn-outline" id="wrwRefreshBtn" onclick="refreshWasteRewindFull()" title="Tarik data mentah terbaru (import_rewind_kecil.py) lalu muat ulang tampilan"><svg class="ic ic-refresh" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><polyline points="21 3 21 9 15 9"/></svg> Refresh</button>
               </div>
-              <div class="rwk-status" id="rewindKecilStatus">Target import: sheet REWIND</div>
-              <pre id="rewindKecilLog" class="run-log rwk-log" style="display:none;"></pre>
+              <div class="rwk-status" id="wrwRefreshStatus" style="display:none;"></div>
+              <pre id="wrwRefreshLog" class="run-log" style="display:none;"></pre>
               <div class="table-wrap">
                 <table class="wrw-table">
                   <thead><tr id="wrwHead"></tr></thead>
@@ -1847,7 +1845,7 @@
           </div>
           <div class="sheet-summary" style="margin-top:8px;">${sheetSummary}</div>
           <div style="font-size:11px; color:var(--ink-faint); margin-top:8px;">${lastImportLine}</div>
-          ${key === "rewind_kecil" ? `<div style="font-size:11px; color:var(--ink-faint); margin-top:4px;">↻ Refresh Rewind Kecil dipindah ke halaman <b>Waste Rewind</b>.</div>` : ``}
+          ${key === "rewind_kecil" ? `<div style="font-size:11px; color:var(--ink-faint); margin-top:4px;">↻ Refresh untuk source ini digabung ke tombol <b>Refresh</b> di halaman <b>Waste Rewind</b>.</div>` : ``}
         </div>`;
     });
     grid.innerHTML = html;
@@ -2027,44 +2025,55 @@
     } catch(e){ /* diamkan, coba lagi di polling berikutnya */ }
   }
 
-  // ==================== REWIND KECIL — REFRESH TERPISAH ====================
-  let rewindKecilPollTimer = null;
-  async function runRewindKecil(){
-    const btn = document.getElementById("btnRefreshRewindKecil");
-    const status = document.getElementById("rewindKecilStatus");
-    const log = document.getElementById("rewindKecilLog");
+  // ==================== WASTE REWIND — TOMBOL REFRESH TUNGGAL ====================
+  // Satu tombol "Refresh" di halaman ini sekarang melakukan DUA hal berurutan:
+  //   1. Jalankan import_rewind_kecil.py (tarik data mentah terbaru dari
+  //      sumber -> tulis ke sheet "REWIND" di spreadsheet "Menghitung Waste",
+  //      lihat TARGET_SPREADSHEET_ID di import_rewind_kecil.py -- BUKAN ke
+  //      warehouse utama).
+  //   2. Setelah selesai (apapun hasilnya), muat ulang tampilan dari sheet
+  //      "REWIND_PY" (yang formula-nya baca dari sheet REWIND di atas).
+  // Dulu ada 2 tombol terpisah untuk ini -- sekarang digabung jadi 1 supaya
+  // user tidak perlu klik dua kali / bingung urutannya.
+  let wrwRefreshPollTimer = null;
+  async function refreshWasteRewindFull(){
+    const btn = document.getElementById("wrwRefreshBtn");
+    const status = document.getElementById("wrwRefreshStatus");
+    const log = document.getElementById("wrwRefreshLog");
     if(!btn) return;
     try{
       const res = await fetch(`${API_BASE}/api/produksi/rewind-kecil/run`, {method:"POST"});
       const data = await res.json();
-      if(!data.success){ toast(data.message || "Refresh Rewind Kecil gagal dimulai", "error"); return; }
+      if(!data.success){ toast(data.message || "Refresh gagal dimulai", "error"); return; }
       btn.disabled = true; btn.classList.add("spinning");
-      if(log){ log.style.display="block"; log.textContent="⏳ Menjalankan import_rewind_kecil.py...\n"; }
-      if(status) status.innerText = "⏳ Refresh Rewind Kecil sedang berjalan...";
-      if(rewindKecilPollTimer) clearInterval(rewindKecilPollTimer);
-      rewindKecilPollTimer = setInterval(pollRewindKecil, 1500);
-      pollRewindKecil();
+      if(status){ status.style.display="block"; status.innerText = "⏳ Menarik data mentah terbaru (import_rewind_kecil.py)..."; }
+      if(log){ log.style.display="none"; log.textContent=""; }
+      if(wrwRefreshPollTimer) clearInterval(wrwRefreshPollTimer);
+      wrwRefreshPollTimer = setInterval(pollWasteRewindRefresh, 1500);
+      pollWasteRewindRefresh();
     }catch(e){ toast("Error: " + e.message, "error"); }
   }
-  async function pollRewindKecil(){
-    const btn = document.getElementById("btnRefreshRewindKecil");
-    const status = document.getElementById("rewindKecilStatus");
-    const log = document.getElementById("rewindKecilLog");
+  async function pollWasteRewindRefresh(){
+    const btn = document.getElementById("wrwRefreshBtn");
+    const status = document.getElementById("wrwRefreshStatus");
+    const log = document.getElementById("wrwRefreshLog");
     try{
       const res = await fetch(`${API_BASE}/api/produksi/rewind-kecil/status`);
       const st = await res.json();
-      if(log){ log.style.display="block"; log.textContent=st.log||""; log.scrollTop=log.scrollHeight; }
-      if(!st.running){
-        clearInterval(rewindKecilPollTimer); rewindKecilPollTimer=null;
-        if(btn){ btn.disabled=false; btn.classList.remove("spinning"); }
-        const ok = st.returncode === 0;
-        if(status) status.innerText = ok
-          ? `✅ Selesai — ${st.rows_written ?? 0} baris${st.finished_at ? " — "+st.finished_at : ""}`
-          : `⚠️ Gagal${st.error ? ": "+st.error : ""}`;
-        toast(ok ? `Rewind Kecil selesai (${st.rows_written ?? 0} baris)` : "Refresh Rewind Kecil gagal — cek log", ok ? "success" : "error");
-        if(ok) loadWasteRewind(true); // data REWIND_PY ikut baru setelah sheet REWIND sumbernya di-refresh
+      if(st.running) return; // masih jalan, tunggu polling berikutnya
+      clearInterval(wrwRefreshPollTimer); wrwRefreshPollTimer=null;
+      const ok = st.returncode === 0;
+      if(!ok){
+        if(log){ log.style.display="block"; log.textContent = st.log || st.error || "Gagal, tidak ada log."; }
+        if(status) status.innerText = `⚠️ Gagal menarik data mentah${st.error ? ": "+st.error : ""} — tampilan tetap dimuat ulang dari data terakhir.`;
+        toast("Refresh data mentah Rewind Kecil gagal — cek log", "error");
+      } else {
+        if(status) status.innerText = `✅ Data mentah diperbarui (${st.rows_written ?? 0} baris) — memuat tampilan...`;
       }
-    }catch(e){}
+      await loadWasteRewind(true); // baca ulang REWIND_PY (matikan .spinning-nya loadWasteRewind sendiri)
+      if(ok && status) setTimeout(()=>{ status.style.display="none"; }, 4000);
+      btn.disabled = false; btn.classList.remove("spinning");
+    }catch(e){ /* diamkan, coba lagi di polling berikutnya */ }
   }
 
   // ==================== WASTE REWIND ====================

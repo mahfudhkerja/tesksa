@@ -15,6 +15,13 @@ from import_engine import get_source, run_gsheet_import, run_excel_import
 SOURCE_KEY = "rewind_kecil"
 TARGET_SHEET_NAME = "REWIND"
 
+# Tujuan tulis data mentah SENGAJA BUKAN target_sheet_id global di
+# config.json (warehouse utama, dipakai bareng semua source lain) --
+# tab "REWIND" yang dibaca sheet "REWIND_PY" (perhitungan waste, lihat
+# halaman Waste Rewind) ada DI SPREADSHEET INI ("Menghitung Waste"),
+# jadi harus ditulis ke sini supaya REWIND_PY ikut update.
+TARGET_SPREADSHEET_ID = "1DnXtcMPkRdoadgO7ML7y7M9s4injmMTsKqEQ4BPrJxc"
+
 TARGET_HEADERS = [
     "TANGGAL",
     "SHIFT",
@@ -60,6 +67,7 @@ def run():
             HEADER_KEYWORDS,
             junk_keywords=JUNK_KEYWORDS,
             header_min_matches=HEADER_MIN_MATCHES,
+            target_id=TARGET_SPREADSHEET_ID,
         )
 
     if source_type == "excel":
@@ -68,6 +76,7 @@ def run():
             TARGET_SHEET_NAME,
             TARGET_HEADERS,
             HEADER_KEYWORDS,
+            target_id=TARGET_SPREADSHEET_ID,
         )
 
     raise ValueError(
