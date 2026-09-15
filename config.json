@@ -8,6 +8,7 @@
       "source_id": "18P0PovrtCGAtC0argpNInFGujoUYLCgBqKmMXUD0x_k",
       "source_name": "PRINTING 2 -THN. 2026.",
       "sheets": [
+        "SEPTEMBER 2026",
         "AGS 2026",
         "JULY 2026",
         "JUNI 2026",
@@ -17,10 +18,10 @@
         "JAN 2026",
         "FEB 2026"
       ],
-      "last_connected": "2026-08-23 11:43:40",
-      "last_import": "2026-08-23 13:56:04",
+      "last_connected": "2026-09-02 15:28:05",
+      "last_import": "2026-09-04 13:53:30",
       "last_status": "OK",
-      "last_rows": 3595,
+      "last_rows": 3924,
       "last_error": null
     },
     "printing_3": {
@@ -30,19 +31,20 @@
       "source_id": "1pUnsnltMSb2SiEvdjikkwAjY9jIgLMl2sqCo-48ZnLc",
       "source_name": "PRINTING 3 - 2026",
       "sheets": [
+        "SEPTEMBER 2026",
         "AGUST 26",
         "JULY 2026",
         "JUNI 2026",
+        "JANUARI 2026",
         "MEI 2026",
         "APRIL 2026",
         "MARET 2026",
-        "FEBRUARY 2026",
-        "JANUARI 2026"
+        "FEBRUARY 2026"
       ],
-      "last_connected": "2026-08-23 11:43:53",
-      "last_import": "2026-08-23 13:56:53",
+      "last_connected": "2026-09-02 15:28:45",
+      "last_import": "2026-09-04 13:54:22",
       "last_status": "OK",
-      "last_rows": 1134,
+      "last_rows": 1294,
       "last_error": null
     },
     "printing_4": {
@@ -52,6 +54,7 @@
       "source_id": "1kR5aqeHg8X_V3BWzXCYeSL_3A12FrqDxvUxwXloZJTE",
       "source_name": "PRINTING 4 - 2025 & 2026",
       "sheets": [
+        "September 2026",
         "Agus 2026",
         "july 2026",
         "juni 2026",
@@ -61,10 +64,10 @@
         "JAN 2026",
         "FEB 2026"
       ],
-      "last_connected": "2026-08-23 11:44:12",
-      "last_import": "2026-08-23 13:57:46",
+      "last_connected": "2026-09-02 15:29:23",
+      "last_import": "2026-09-04 13:55:12",
       "last_status": "OK",
-      "last_rows": 4230,
+      "last_rows": 4550,
       "last_error": null
     },
     "printing_5": {
@@ -74,6 +77,7 @@
       "source_id": "1kf3JQGPZtQLMyj8IPjLH6318vj1ZMnaquoOYRF4wTi0",
       "source_name": "PRINTING 5 2026 TERBARU",
       "sheets": [
+        "SEPTEMBER 2026",
         "AGUSTUS 2026",
         "JULI 2026",
         "JUNI 2026",
@@ -83,32 +87,10 @@
         "FEBRUARI2026",
         "MARET"
       ],
-      "last_connected": "2026-08-23 11:47:38",
-      "last_import": "2026-08-23 13:58:38",
+      "last_connected": "2026-09-02 15:29:50",
+      "last_import": "2026-09-04 13:56:26",
       "last_status": "OK",
-      "last_rows": 3913,
-      "last_error": null
-    },
-    "rw": {
-      "label": "Rewind (RW)",
-      "type": "gsheet",
-      "script": "import_rw.py",
-      "source_id": "17It0046kdt9aC9LQzRwAbPr5P0z3SDXyikVEpLFvz5U",
-      "source_name": "Laporan Rewind Besar",
-      "sheets": [
-        "AGUS 2026",
-        "JULIE 2026",
-        "JUNI 2026",
-        "MEI 2026",
-        "APRIL 2026",
-        "MAR 2026",
-        "FEB 2026",
-        "JAN 2026"
-      ],
-      "last_connected": "2026-08-23 11:47:59",
-      "last_import": "2026-08-23 13:59:39",
-      "last_status": "OK",
-      "last_rows": 11592,
+      "last_rows": 4402,
       "last_error": null
     },
     "dry_1": {
@@ -118,6 +100,7 @@
       "source_id": "1MlR1Hx0zopLsn-RPSdJWk_roKzy7EBPD",
       "source_name": "Laporan Dry 1.xlsx",
       "sheets": [
+        "SEP 2026",
         "AGS 2026",
         "JUL 2026",
         "JUN 2026",
@@ -127,10 +110,10 @@
         "FEB 2026",
         "JAN 2026"
       ],
-      "last_connected": "2026-08-23 11:40:39",
-      "last_import": "2026-08-23 14:02:08",
+      "last_connected": "2026-09-02 15:06:52",
+      "last_import": "2026-09-04 14:01:22",
       "last_status": "OK",
-      "last_rows": 5496,
+      "last_rows": 5721,
       "last_error": null
     },
     "dry_2": {
@@ -149,10 +132,10 @@
         "FEB 2026",
         "JAN 2026"
       ],
-      "last_connected": "2026-08-23 11:40:50",
-      "last_import": "2026-08-23 14:03:48",
+      "last_connected": "2026-09-02 15:12:36",
+      "last_import": "2026-09-04 14:04:09",
       "last_status": "OK",
-      "last_rows": 5100,
+      "last_rows": 5223,
       "last_error": null
     },
     "dry_3": {
@@ -162,23 +145,20 @@
       "source_id": "1YwEnFwKRkztcv_sf6g-q6J0_QsKlYxjS",
       "source_name": "Laporan Dry 3.xlsx",
       "sheets": [
-        "JAN 2026",
-        "FEB 2026",
-        "MAR 2026",
-        "APR 2026",
-        "MEI 2026",
-        "JUN 2026",
-        "JUL 2026",
+        "SEP 2026",
         "AGS 2026",
-        "SEPT 2026",
-        "OKT 2026",
-        "NOV 2026",
-        "DES 2026"
+        "JUL 2026",
+        "JUN 2026",
+        "MEI 2026",
+        "APR 2026",
+        "MAR 2026",
+        "FEB 2026",
+        "JAN 2026"
       ],
-      "last_connected": "2026-08-23 11:41:54",
-      "last_import": "2026-08-23 14:05:12",
+      "last_connected": "2026-09-02 15:22:37",
+      "last_import": "2026-09-04 14:06:13",
       "last_status": "OK",
-      "last_rows": 4743,
+      "last_rows": 4960,
       "last_error": null
     },
     "dry_4": {
@@ -188,6 +168,7 @@
       "source_id": "1bzT9Jl9EZHNq-iPw_vQy_iRmH9eNh1UN",
       "source_name": "Laporan Dry 4.xlsx",
       "sheets": [
+        "SEP 2026",
         "AGS 2026",
         "JUL 2026",
         "JUN 2026",
@@ -197,10 +178,10 @@
         "FEB 2026",
         "JAN 2026"
       ],
-      "last_connected": "2026-08-23 11:42:01",
-      "last_import": "2026-08-23 14:06:20",
+      "last_connected": "2026-09-02 15:24:09",
+      "last_import": "2026-09-04 14:08:01",
       "last_status": "OK",
-      "last_rows": 1893,
+      "last_rows": 1914,
       "last_error": null
     },
     "dry_5": {
@@ -210,6 +191,7 @@
       "source_id": "1CPtAI3Y6FMhG4dfkxJS9Y3FeUSYBLx-b",
       "source_name": " Laporan Dry 5.xlsx",
       "sheets": [
+        "SEP 2026",
         "AGS 2026",
         "JUL 2026",
         "JUN 2026",
@@ -219,10 +201,33 @@
         "FEB 2026",
         "JAN 2026"
       ],
-      "last_connected": "2026-08-23 11:43:06",
-      "last_import": "2026-08-23 12:01:57",
+      "last_connected": "2026-09-02 15:25:42",
+      "last_import": "2026-09-04 14:09:39",
       "last_status": "OK",
-      "last_rows": 273,
+      "last_rows": 290,
+      "last_error": null
+    },
+    "rw": {
+      "label": "Rewind (RW)",
+      "type": "gsheet",
+      "script": "import_rw.py",
+      "source_id": "17It0046kdt9aC9LQzRwAbPr5P0z3SDXyikVEpLFvz5U",
+      "source_name": "Laporan Rewind Besar",
+      "sheets": [
+        "SEPTE 2026",
+        "AGUS 2026",
+        "JULIE 2026",
+        "JUNI 2026",
+        "MEI 2026",
+        "APRIL 2026",
+        "MAR 2026",
+        "FEB 2026",
+        "JAN 2026"
+      ],
+      "last_connected": "2026-09-02 15:30:38",
+      "last_import": "2026-09-04 13:57:31",
+      "last_status": "OK",
+      "last_rows": 12209,
       "last_error": null
     },
     "ex": {
@@ -232,6 +237,7 @@
       "source_id": "1AtSQbz-1JWAf407NsnIj702QkSH7d_Xo5uetjpwI0VQ",
       "source_name": "Laporan EXTRUSI",
       "sheets": [
+        "SEP 2026",
         "AGS 2026",
         "JUL 2026",
         "JUN 2026",
@@ -241,11 +247,11 @@
         "FEB 2026",
         "JAN 2026"
       ],
-      "last_connected": "2026-08-23 11:43:03",
-      "last_import": "2026-08-23 12:05:17",
-      "last_status": "ERROR",
-      "last_rows": null,
-      "last_error": "HTTPSConnectionPool(host='oauth2.googleapis.com', port=443): Read timed out. (read timeout=120)"
+      "last_connected": "2026-09-02 15:26:26",
+      "last_import": "2026-09-04 14:11:32",
+      "last_status": "OK",
+      "last_rows": 5868,
+      "last_error": null
     },
     "sf": {
       "label": "SF",
@@ -254,6 +260,7 @@
       "source_id": "1l70Ing74GecNB2lrgJNzEaCQQAsLYqjwJMVgpqbBIXM",
       "source_name": "Laporan Solvent Free 1",
       "sheets": [
+        "SEP 2026",
         "AGS 2026",
         "JUN 2026",
         "JUL 2026",
@@ -263,10 +270,10 @@
         "FEB 2026",
         "JAN 2026"
       ],
-      "last_connected": "2026-08-23 11:48:52",
-      "last_import": "2026-08-23 12:02:45",
+      "last_connected": "2026-09-02 15:31:02",
+      "last_import": "2026-09-04 14:10:32",
       "last_status": "OK",
-      "last_rows": 3074,
+      "last_rows": 3270,
       "last_error": null
     },
     "sl": {
@@ -276,6 +283,7 @@
       "source_id": "1DJJsTdD8WbSTlCnWDEnpNFW_ywMCGcT0V3I6Gn0Kebs",
       "source_name": "Laporan Slitting New 2025 & 2026",
       "sheets": [
+        "SEP 2026",
         "AGS 2026",
         "JUL 2026",
         "JUNI 2026",
@@ -285,10 +293,163 @@
         "FEB 2026",
         "JAN 2026"
       ],
-      "last_connected": "2026-08-23 11:50:02",
-      "last_import": "2026-08-23 14:00:47",
+      "last_connected": "2026-09-02 15:31:29",
+      "last_import": "2026-09-04 13:58:46",
       "last_status": "OK",
-      "last_rows": 20773,
+      "last_rows": 21793,
+      "last_error": null
+    },
+    "bag": {
+      "label": "Bag Making",
+      "type": "excel",
+      "script": "import_bag.py",
+      "source_id": "1CTxV1lELzte84x928rWwbuhKMK8kHTCw",
+      "source_name": "LAPORAN BAG.xlsx",
+      "sheets": [
+        "SEPT 2026",
+        "AGS 2026",
+        "JUL 2026",
+        "JUN 2026",
+        "MEI 2026",
+        "MAR 2026",
+        "APR 2026",
+        "FEB 2026",
+        "JAN 2026"
+      ],
+      "last_connected": "2026-09-02 15:03:08",
+      "last_import": "2026-09-04 14:13:07",
+      "last_status": "OK",
+      "last_rows": 2110,
+      "last_error": null
+    },
+    "jo": {
+      "label": "JO",
+      "type": "gsheet",
+      "script": "import_jo.py",
+      "source_id": "1makN-5A76ZQTPFLswjH-cUdW2J_TbWlNqnNp_FSIrCE",
+      "source_name": "(DATABASE Mhfdh)",
+      "sheets": [
+        "JO BARU"
+      ],
+      "last_connected": "2026-08-23 20:50:02",
+      "last_import": "2026-09-04 14:13:51",
+      "last_status": "OK",
+      "last_rows": 2675,
+      "last_error": null
+    },
+    "val": {
+      "label": "Validasi (VAL)",
+      "type": "gsheet",
+      "script": "import_val.py",
+      "source_id": "1VskM8j2zVMIlF492CO_t7dzfhUnK3Pg9KM8mRJqmukU",
+      "source_name": "VALIDASI SEPTEMBER",
+      "sheets": [
+        "04/09/2026/1"
+      ],
+      "last_connected": "2026-09-04 08:48:56",
+      "last_import": "2026-09-04 08:49:19",
+      "last_status": "OK",
+      "last_rows": 59,
+      "last_error": null
+    },
+    "lp": {
+      "label": "Laporan Produksi",
+      "type": "gsheet",
+      "script": "import_lp.py",
+      "source_id": "1AMYX9y9lajbj_9-lDYVbf25lZ5D1Iq_fqUC8FXXsoks",
+      "source_name": "Laporan Produksi  2026 NEW",
+      "sheets": [
+        "JANUARI 2026",
+        "Februari 2026",
+        "Maret 2026",
+        "April  2026",
+        "Mei 2026",
+        "Juni 2026",
+        "Juli 2026",
+        "Agustus 2026",
+        "September 2026"
+      ],
+      "last_connected": "2026-09-02 15:27:35",
+      "last_import": "2026-09-04 08:45:57",
+      "last_status": "OK",
+      "last_rows": 10507,
+      "last_error": null
+    },
+    "update_stock": {
+      "label": "Update Stock",
+      "type": "gsheet",
+      "script": "import_update_stock.py",
+      "source_id": "1M2P_aEMr8UDPprv14jbGlIUtHkHCH-4lWht0bxRCnH4",
+      "source_name": "UPDATE STOCK REGULER 2026 (Evie Pagi - 03 Sept)",
+      "sheets": [
+        "PET",
+        "PL",
+        "PETZ",
+        "CZB",
+        "NYLON",
+        "CPPM",
+        "CPPT",
+        "SMGZ",
+        "VMOPP",
+        "MF LITHO BOPE",
+        "LLDPE",
+        "KZMB",
+        "ALU FOIL",
+        "PLO",
+        "SFM",
+        "MPOPP",
+        "PXB",
+        "FORM"
+      ],
+      "target_id": "1lSj54tQP8QKMR96HiAHBCd1Zm-fOxnkdt9x3gD1tuEM",
+      "target_sheet": "UPDATE_STOCK",
+      "last_connected": "2026-09-03 15:00:30",
+      "last_import": "2026-09-03 15:06:30",
+      "last_status": "OK",
+      "last_rows": 16287,
+      "last_error": null
+    },
+    "form_st": {
+      "label": "Form Serah Terima (ST)",
+      "type": "gsheet",
+      "script": "import_form_st.py",
+      "source_id": "1DbnUjdpu8sD4L1Gg1H52qa7_Rp5y2hzTmHniIPH-EZ0",
+      "source_name": "FORM SERAH TERIMA BARANG DARI PRODUKSI KE GUDANG JADI",
+      "sheets": [
+        "LAMA",
+        "2026 BARU"
+      ],
+      "last_connected": "2026-08-27 13:40:10",
+      "last_import": "2026-09-04 08:49:32",
+      "last_status": "OK",
+      "last_rows": 7220,
+      "last_error": null
+    },
+    "gudang": {
+      "label": "Data Gudang",
+      "type": "local_excel_manual",
+      "target_id": "1-ZyKSwXLzZaA6uNYRcpJNQZWX_ssYzvX45Z51xERipI",
+      "target_sheet": "API",
+      "folder": "Z:\\Job Order 2022-06-20 23;00;03 (Full)\\Firman + Suy\\2026\\(Sep '26)\\4 Sep",
+      "filename": "STOCK GUDANG 03 SEPT 2026 SHIFT 3.xlsx",
+      "sheet_name": "STOK GUDANG JADI 03 SEPT",
+      "last_connected": "2026-09-04 08:26:21",
+      "last_import": "2026-09-04 08:56:46",
+      "last_status": "OK",
+      "last_rows": 14569,
+      "last_error": null
+    },
+    "rewind_kecil": {
+      "label": "Rewind Kecil",
+      "type": "gsheet",
+      "script": "import_rewind_kecil.py",
+      "source_id": "1DnXtcMPkRdoadgO7ML7y7M9s4injmMTsKqEQ4BPrJxc",
+      "source_name": "",
+      "sheets": ["REWIND"],
+      "last_connected": null,
+      "last_import": null,
+      "last_status": null,
+      "last_rows": 0,
       "last_error": null
     }
   }

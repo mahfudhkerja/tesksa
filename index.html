@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>KSA System</title>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&family=Unbounded:wght@500;700;800;900&display=swap" rel="stylesheet">
 <style>
   :root{
     --blue-50:#eef4fb; --blue-100:#d9e7f6; --blue-200:#b7d2ee;
@@ -112,6 +112,10 @@
   .nav-item:hover{background:var(--blue-50); color:var(--blue-dark);}
   .nav-item:hover .ic{transform:scale(1.1);}
   .nav-item.active{background:linear-gradient(135deg, var(--blue), var(--blue-dark)); color:white; box-shadow:0 6px 14px -6px rgba(53,114,182,.5);}
+  /* Item/menu yang nggak boleh diakses role user yang lagi login: tetap
+     KELIHATAN (nggak disembunyikan) tapi nggak bisa diklik & keliatan mati.
+     pointer-events:none nyegah onclick-nya kepencet sama sekali. */
+  .nav-item.nav-disabled, .nav-child.nav-disabled{opacity:.38; cursor:not-allowed; pointer-events:none; filter:grayscale(.4);}
   .nav-children{margin:2px 0 6px 30px; max-height:0; overflow:hidden; transition: max-height .25s var(--ease);}
   .nav-children.open{max-height:200px;}
   .nav-child{padding:9px 11px; margin-bottom:3px; border-radius:8px; cursor:pointer; font-size:12.5px; color:var(--ink-soft); font-weight:600; transition: all .15s var(--ease); border-left:2px solid transparent;}
@@ -128,19 +132,31 @@
 
   .main{flex:1; display:flex; flex-direction:column; min-width:0;}
   .topbar{
-    height:68px; padding:0 28px; display:flex; align-items:center; justify-content:space-between;
+    height:68px; padding:0 28px; display:flex; align-items:center; justify-content:space-between; gap:12px;
     background:linear-gradient(90deg, var(--blue), var(--blue-light)); color:white; position:relative; overflow:hidden;
   }
-  .topbar h2{font-size:17px; font-weight:700; letter-spacing:.01em; animation: fadeUp .3s var(--ease);}
-  .live-pill{display:flex; align-items:center; gap:7px; background:rgba(255,255,255,.16); backdrop-filter:blur(4px); padding:7px 14px; border-radius:20px; font-size:12px; font-weight:600;}
+  .topbar h2{font-size:17px; font-weight:700; letter-spacing:.01em; animation: fadeUp .3s var(--ease); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .topbar-left{display:flex; align-items:center; gap:10px; min-width:0;}
+  .live-pill{display:flex; align-items:center; gap:7px; background:rgba(255,255,255,.16); backdrop-filter:blur(4px); padding:7px 14px; border-radius:20px; font-size:12px; font-weight:600; flex-shrink:0;}
   .live-pill .blip{width:7px; height:7px; border-radius:50%; background:#7CFF9E; animation: blipPulse 2s infinite;}
+
+  /* Hamburger -- cuma kepake di layar sempit, lihat @media di bawah */
+  .hamburger-btn{
+    display:none; background:rgba(255,255,255,.18); border:none; color:white;
+    width:36px; height:36px; border-radius:9px; align-items:center; justify-content:center;
+    font-size:17px; cursor:pointer; flex-shrink:0; transition:background .15s var(--ease);
+  }
+  .hamburger-btn:hover{background:rgba(255,255,255,.3);}
+  .sidebar-backdrop{position:fixed; inset:0; background:rgba(15,25,45,.5); z-index:899; display:none;}
+  .sidebar-backdrop.show{display:block; animation:fadeIn .2s;}
+
 
   .content{flex:1; overflow-y:auto; padding:26px 30px;}
   .page{animation: fadeUp .3s var(--ease);}
   .card{background:var(--card); border:1px solid var(--line); border-radius:var(--radius-lg); box-shadow:var(--shadow); padding:22px; margin-bottom:20px; transition: box-shadow .2s var(--ease);}
   .card h3{font-size:15px; font-weight:700; color:var(--ink);}
 
-  .stat-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:16px; margin-bottom:20px;}
+  .stat-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(min(200px,100%),1fr)); gap:16px; margin-bottom:20px;}
   .stat{background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:18px; box-shadow:var(--shadow); transition: all .2s var(--ease); cursor:default;}
   .stat:hover{transform:translateY(-2px); box-shadow:var(--shadow-lg);}
   .stat .label{font-size:11.5px; color:var(--ink-soft); font-weight:600; text-transform:uppercase; letter-spacing:.04em;}
@@ -153,6 +169,9 @@
   thead th{background:var(--blue-dark); color:white; text-align:left; padding:11px 12px; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.03em; white-space:nowrap;}
   thead th:first-child{border-top-left-radius:10px;}
   thead th:last-child{border-top-right-radius:10px;}
+  thead th.th-resizable{position:relative; overflow:hidden; text-overflow:ellipsis;}
+  .col-resizer{position:absolute; top:0; right:0; width:6px; height:100%; cursor:col-resize; user-select:none; touch-action:none;}
+  .col-resizer:hover, .col-resizer.resizing{background:rgba(255,255,255,.35);}
   tbody td{padding:11px 12px; border-bottom:1px solid var(--line-soft); color:var(--ink); overflow-wrap:anywhere; word-break:break-word;}
   tbody tr{transition: background .12s var(--ease);}
   tbody tr:hover{background:var(--blue-50);}
@@ -169,6 +188,9 @@
   .btn-mini.acc:hover{background:#188549; transform:translateY(-1px);}
   .btn-mini.wa{background:var(--blue); color:white; box-shadow:0 4px 10px -4px rgba(53,114,182,.5);}
   .btn-mini.wa:hover{background:var(--blue-dark); transform:translateY(-1px);}
+  .btn-mini.okmanual{background:linear-gradient(135deg,var(--ok),#188549); color:white; display:inline-flex; align-items:center; gap:5px; box-shadow:0 4px 10px -4px rgba(31,157,85,.5);}
+  .btn-mini.okmanual:hover{transform:translateY(-1px); box-shadow:0 6px 14px -4px rgba(31,157,85,.6);}
+  .btn-mini.okmanual:active{transform:translateY(0);}
   .check-acc{font-size:19px; color:var(--ok); font-weight:800; display:inline-block; animation: checkPop .35s var(--ease);}
 
   .toolbar{display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:16px;}
@@ -185,6 +207,19 @@
   .btn-outline.spinning .ic-refresh{transform:none;}
   .btn-danger-outline{height:41px; padding:0 16px; border-radius:10px; border:1.5px solid var(--warn); background:white; color:var(--warn); font-weight:700; font-size:12.5px; cursor:pointer; transition: all .15s var(--ease);}
   .btn-danger-outline:hover{background:var(--warn-bg); transform:translateY(-1px);}
+  .upload-drop{border:1.5px dashed var(--blue-200); border-radius:12px; padding:16px 14px; text-align:center; cursor:pointer; transition:all .15s var(--ease); background:var(--blue-50);}
+  .upload-drop:hover{border-color:var(--blue-light); background:var(--blue-100);}
+  .upload-drop:focus-visible{outline:none; border-color:var(--blue); box-shadow:0 0 0 4px var(--blue-50);}
+  .upload-drop.dragover{border-color:var(--blue); background:var(--blue-100); transform:scale(1.01);}
+  .upload-drop.uploading{cursor:wait; opacity:.75;}
+  .upload-drop-icon{font-size:19px; line-height:1; margin-bottom:5px;}
+  .upload-drop-text{font-size:12.5px; font-weight:700; color:var(--blue-dark);}
+  .upload-drop-text b{text-decoration:underline; text-underline-offset:2px;}
+  .upload-drop-sub{font-size:10.5px; color:var(--ink-faint); margin-top:3px;}
+  .us-filter-group{display:inline-flex; gap:6px; flex-wrap:wrap;}
+  .us-filter-chip{height:33px; padding:0 14px; border-radius:99px; border:1.5px solid var(--line); background:white; color:var(--ink-soft); font-weight:700; font-size:12px; cursor:pointer; transition: all .15s var(--ease);}
+  .us-filter-chip:hover{border-color:var(--blue-200); color:var(--blue-dark);}
+  .us-filter-chip.active{background:var(--blue); border-color:var(--blue); color:white;}
 
   .empty{text-align:center; padding:44px 10px; color:var(--ink-soft); font-size:13px;}
   .empty .ic{font-size:30px; display:block; margin-bottom:10px; opacity:.5;}
@@ -192,7 +227,7 @@
   .footnote .dot{width:5px; height:5px; border-radius:50%; background:var(--ok);}
 
   /* Toasts */
-  #toastWrap{position:fixed; top:18px; right:18px; z-index:999; display:flex; flex-direction:column; gap:10px;}
+  #toastWrap{position:fixed; top:18px; right:18px; z-index:2000; display:flex; flex-direction:column; gap:10px;}
   .toast{
     min-width:280px; max-width:340px; background:var(--card); border-radius:12px; box-shadow:var(--shadow-lg);
     padding:14px 16px; display:flex; gap:10px; align-items:flex-start; border-left:4px solid var(--blue);
@@ -217,7 +252,7 @@
   .btn-confirm:hover{transform:translateY(-1px);}
 
   /* ---------- INPUT DATA PRODUKSI ---------- */
-  .produksi-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(360px,1fr)); gap:16px;}
+  .produksi-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(min(360px,100%),1fr)); gap:16px;}
   .produksi-card{display:flex; flex-direction:column;}
   .produksi-card .link-row{display:flex; flex-direction:column; gap:8px; margin-top:12px;}
   .produksi-card .link-input{width:100%; box-sizing:border-box; height:41px; border:1.5px solid var(--line); border-radius:10px; padding:0 12px; font-size:12.5px; background:#fbfcfe; text-overflow:ellipsis;}
@@ -225,6 +260,14 @@
   .produksi-card .btn-load{width:100%; justify-content:center; box-sizing:border-box; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
   .produksi-card .btn-sheet{width:100%; justify-content:center; box-sizing:border-box;}
   .produksi-card h3{overflow-wrap:anywhere;}
+  /* Rewind Kecil — tombol refresh import (halaman Waste Rewind) */
+  .rwk-refresh-btn{white-space:nowrap;}
+  .rwk-status{font-size:11px; color:var(--ink-faint); margin:8px 0 2px;}
+  .gudang-pick-list{display:flex; flex-direction:column; gap:6px; max-width:680px;}
+  .gudang-pick-item{display:flex; justify-content:space-between; align-items:center; gap:10px; padding:9px 12px; border:1.5px solid var(--line); border-radius:10px; background:#fbfcfe; cursor:pointer; font-size:12.5px; transition:border-color .15s var(--ease), background .15s var(--ease);}
+  .gudang-pick-item:hover{border-color:var(--blue); background:var(--blue-50);}
+  .gudang-pick-item.selected{border-color:var(--blue); background:var(--blue-50); font-weight:700; color:var(--blue-dark);}
+  .gudang-pick-item .meta{color:var(--ink-faint); font-size:11px; white-space:nowrap;}
   .status-pill{display:inline-flex; align-items:center; gap:6px; padding:5px 11px; border-radius:20px; font-size:11px; font-weight:700; white-space:nowrap;}
   .status-pill.on{background:var(--ok-bg); color:var(--ok);}
   .status-pill.off{background:var(--line-soft); color:var(--ink-faint);}
@@ -237,12 +280,321 @@
     font-family:'JetBrains Mono',monospace; max-height:260px; overflow-y:auto; white-space:pre-wrap; word-break:break-word;
   }
 
-  #sheetModalOverlay{position:fixed; inset:0; background:rgba(15,25,45,.45); backdrop-filter:blur(2px); z-index:998; display:none; align-items:center; justify-content:center; animation: fadeIn .2s;}
+  #sheetModalOverlay, #gudangSheetModalOverlay{position:fixed; inset:0; background:rgba(15,25,45,.45); backdrop-filter:blur(2px); z-index:998; display:none; align-items:center; justify-content:center; animation: fadeIn .2s;}
   .sheet-modal-box{width:420px; max-height:80vh; display:flex; flex-direction:column;}
   .sheet-modal-list{margin-top:14px; overflow-y:auto; flex:1; border:1px solid var(--line); border-radius:10px; padding:6px;}
   .sheet-check-row{display:flex; align-items:center; gap:10px; padding:9px 10px; border-radius:8px; cursor:pointer; font-size:13px; font-weight:600; color:var(--ink);}
+
+  /* ==== Chat input bar (Tanya JO) ==== */
+  .chat-inputbar{
+    display:flex; align-items:center; gap:8px; margin-top:12px;
+    background:var(--card); border:1.5px solid var(--line); border-radius:999px;
+    padding:5px 6px 5px 18px; box-shadow:var(--shadow-sm);
+    transition: border-color .15s var(--ease), box-shadow .15s var(--ease);
+  }
+  .chat-inputbar:focus-within{ border-color:var(--blue-light); box-shadow:0 0 0 4px var(--blue-50); }
+  .chat-inputbar input{
+    flex:1; border:none; outline:none; background:transparent;
+    font-size:13.5px; color:var(--ink); font-family:inherit; padding:9px 0;
+  }
+  .chat-inputbar input::placeholder{ color:var(--ink-faint); }
+  .chat-send-btn{
+    width:38px; height:38px; min-width:38px; border-radius:50%; border:none; flex-shrink:0;
+    background:linear-gradient(135deg,var(--blue-light),var(--blue-dark)); color:#fff;
+    display:flex; align-items:center; justify-content:center; cursor:pointer;
+    transition: transform .15s var(--ease), box-shadow .15s var(--ease), background .15s var(--ease);
+    box-shadow:0 4px 10px -4px rgba(53,114,182,.55);
+  }
+  .chat-send-btn svg{ width:16px; height:16px; margin-left:1px; }
+  .chat-send-btn:hover:not(:disabled){ transform:scale(1.07); }
+  .chat-send-btn:active:not(:disabled){ transform:scale(.93); }
+  .chat-send-btn:disabled{ background:var(--line-soft); color:var(--ink-faint); box-shadow:none; cursor:default; }
+  .chat-table-wrap{ overflow-x:auto; margin:6px 0; border-radius:10px; border:1px solid var(--line); }
+  table.chat-table{ border-collapse:collapse; width:100%; font-size:12.5px; white-space:normal; }
+  table.chat-table th, table.chat-table td{ padding:7px 10px; border-bottom:1px solid var(--line); text-align:left; }
+  table.chat-table th{ background:var(--blue-50); color:var(--blue-dark); font-weight:700; white-space:normal; word-break:break-word; vertical-align:bottom; }
+  table.chat-table tbody tr:last-child td{ border-bottom:none; }
+  table.chat-table tbody tr:nth-child(even){ background:var(--line-soft); }
   .sheet-check-row:hover{background:var(--blue-50);}
   .sheet-check-row input{width:16px; height:16px; accent-color:var(--blue); cursor:pointer;}
+
+  /* ============================================================
+     FSTL — LAMPIRAN WASTE (prototipe tampilan, gen-z / figma vibe)
+     Palet & font sengaja beda dari shell utama biar modul ini
+     kerasa "signature"-nya sendiri — sidebar & shell tetap biru.
+     ============================================================ */
+  .fstl-scope{
+    --fv:#6D5DFB; --fv-deep:#2E1F73; --fv-soft:#EFEBFF;
+    --fp:#FF5DA2; --fp-soft:#FFE7F1;
+    --fmint:#17D9A3; --fmint-soft:#E3FBF3;
+    --famber:#FFB020; --famber-soft:#FFF3DE;
+    --fcanvas:#F6F3FF; --fink:#201A3D; --fink-soft:#6b628c;
+    --f-radius:20px;
+    font-family:'Plus Jakarta Sans',sans-serif;
+  }
+  .fstl-display{font-family:'Plus Jakarta Sans',sans-serif;}
+
+  .fstl-hero{position:relative; border-radius:28px; padding:38px 34px; margin-bottom:22px; overflow:hidden; background:linear-gradient(120deg, var(--fv-deep) 0%, var(--fv) 55%, var(--fp) 130%); color:white; isolation:isolate;}
+  .fstl-hero::before{content:''; position:absolute; inset:0; z-index:-1; background-image:radial-gradient(circle at 85% 15%, rgba(255,255,255,.28), transparent 45%), radial-gradient(circle at 12% 95%, rgba(23,217,163,.35), transparent 42%);}
+  .fstl-hero-eyebrow{display:inline-flex; align-items:center; gap:7px; background:rgba(255,255,255,.16); backdrop-filter:blur(6px); padding:6px 14px; border-radius:99px; font-size:11px; font-weight:700; letter-spacing:.05em; text-transform:uppercase;}
+  .fstl-hero-eyebrow .dot{width:6px; height:6px; border-radius:50%; background:var(--fmint); box-shadow:0 0 0 4px rgba(23,217,163,.28);}
+  .fstl-hero h1{font-family:'Plus Jakarta Sans',sans-serif; font-size:29px; font-weight:800; line-height:1.18; margin-top:16px; max-width:480px;}
+  .fstl-hero p{margin-top:10px; font-size:13.5px; color:rgba(255,255,255,.85); max-width:430px; line-height:1.65;}
+  .fstl-hero-actions{display:flex; gap:10px; margin-top:22px; flex-wrap:wrap;}
+
+  .fstl-btn{border:none; cursor:pointer; font-weight:800; font-size:12.5px; border-radius:99px; padding:13px 22px; display:inline-flex; align-items:center; gap:8px; transition:transform .15s ease, box-shadow .15s ease; font-family:'Plus Jakarta Sans',sans-serif; letter-spacing:.01em;}
+  .fstl-btn:active{transform:scale(.96);}
+  .fstl-btn-solid{background:var(--fink); color:white; box-shadow:0 10px 26px -10px rgba(0,0,0,.5);}
+  .fstl-btn-solid:hover{transform:translateY(-2px); box-shadow:0 14px 30px -10px rgba(0,0,0,.55);}
+  .fstl-btn-ghost{background:rgba(255,255,255,.14); color:white; border:1.5px solid rgba(255,255,255,.5);}
+  .fstl-btn-ghost:hover{background:rgba(255,255,255,.24); transform:translateY(-2px);}
+
+  .fstl-toolbar{display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:20px;}
+  .fstl-chip-filter{display:inline-flex; align-items:center; gap:6px; background:white; border:1.5px solid var(--fv-soft); color:var(--fv-deep); font-weight:700; font-size:12px; padding:9px 15px; border-radius:99px; cursor:pointer; transition:all .15s ease;}
+  .fstl-chip-filter:hover{border-color:var(--fv); background:var(--fv-soft);}
+  .fstl-chip-filter.active{background:var(--fv); border-color:var(--fv); color:white;}
+  .fstl-search{flex:1; min-width:200px; max-width:280px; position:relative;}
+  .fstl-search input{width:100%; height:40px; border-radius:99px; border:1.5px solid var(--fv-soft); padding:0 16px 0 38px; font-size:12.5px; background:white; box-sizing:border-box;}
+  .fstl-search input:focus{outline:none; border-color:var(--fv); box-shadow:0 0 0 4px var(--fv-soft);}
+  .fstl-search .ic{position:absolute; left:14px; top:50%; transform:translateY(-50%); font-size:13px; opacity:.5;}
+
+  .fstl-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(min(300px,100%),1fr)); gap:20px 18px;}
+  .fstl-card{position:relative; background:white; border-radius:var(--f-radius); padding:20px 20px 18px; box-shadow:0 2px 0 var(--fv-soft), 0 10px 24px -16px rgba(46,31,115,.35); border:1.5px solid #efeaff; transition:transform .18s ease, box-shadow .18s ease;}
+  .fstl-card:hover{transform:translateY(-3px) rotate(-.3deg); box-shadow:0 16px 30px -14px rgba(46,31,115,.4);}
+  .fstl-card-edit{position:absolute; top:-10px; right:-8px; width:36px; height:36px; border-radius:12px; background:var(--famber); color:var(--fink); border:none; display:flex; align-items:center; justify-content:center; font-size:15px; cursor:pointer; box-shadow:0 6px 14px -4px rgba(255,176,32,.6); transform:rotate(8deg); transition:transform .15s ease;}
+  .fstl-card-edit:hover{transform:rotate(0deg) scale(1.08);}
+  .fstl-card .jo{font-family:'Plus Jakarta Sans',sans-serif; font-size:11.5px; font-weight:700; color:var(--fv); background:var(--fv-soft); display:inline-block; padding:3px 9px; border-radius:7px;}
+  .fstl-card h4{font-family:'Plus Jakarta Sans',sans-serif; font-size:14px; font-weight:700; color:var(--fink); margin-top:10px; line-height:1.4;}
+  .fstl-tag-row{display:flex; flex-wrap:wrap; gap:6px; margin-top:12px;}
+  .fstl-tag{font-size:10.5px; font-weight:700; padding:5px 10px; border-radius:99px;}
+  .fstl-card-foot{display:flex; align-items:center; justify-content:space-between; margin-top:14px; padding-top:12px; border-top:1px dashed #ece7fb;}
+  .fstl-status{font-size:11px; font-weight:800; padding:5px 11px; border-radius:99px; display:inline-flex; align-items:center; gap:5px;}
+  .fstl-status.open{background:var(--famber-soft); color:#8a5a00;}
+  .fstl-status.done{background:var(--fmint-soft); color:#0a8460;}
+  .fstl-meta{font-size:11px; color:var(--fink-soft); font-weight:600;}
+
+  .fstl-empty{grid-column:1/-1; text-align:center; padding:60px 20px; background:white; border-radius:var(--f-radius); border:2px dashed var(--fv-soft);}
+  .fstl-empty .emoji{font-size:38px; display:block; margin-bottom:12px;}
+  .fstl-empty h4{font-family:'Plus Jakarta Sans',sans-serif; font-size:15px; color:var(--fink); margin-bottom:6px;}
+  .fstl-empty p{font-size:12.5px; color:var(--fink-soft); max-width:320px; margin:0 auto;}
+  .fstl-spinner-lg{
+    width:34px; height:34px; margin:0 auto 14px; border-radius:50%;
+    border:3px solid var(--fv-soft); border-top-color:var(--fv,#6D5DFB);
+    animation: fstlSpin .7s linear infinite;
+  }
+  @keyframes fstlSpin{ to{ transform:rotate(360deg); } }
+
+  #fstlModalOverlay{position:fixed; inset:0; background:rgba(32,26,61,.55); backdrop-filter:blur(3px); z-index:1000; display:none; align-items:center; justify-content:center; padding:20px;}
+  .fstl-modal{width:640px; max-width:100%; max-height:88vh; overflow-y:auto; background:var(--fcanvas); border-radius:26px; padding:0; box-shadow:0 30px 60px -20px rgba(20,10,50,.5); animation:popIn .25s var(--ease);}
+  .fstl-modal-head{background:linear-gradient(120deg,var(--fv-deep),var(--fv)); padding:26px 28px; border-radius:26px 26px 0 0; color:white; position:relative;}
+  .fstl-modal-head h3{font-family:'Plus Jakarta Sans',sans-serif; font-size:17px; font-weight:800;}
+  .fstl-modal-head p{font-size:12px; color:rgba(255,255,255,.8); margin-top:5px;}
+  .fstl-modal-close{position:absolute; top:20px; right:22px; width:30px; height:30px; border-radius:9px; background:rgba(255,255,255,.18); border:none; color:white; font-size:14px; cursor:pointer;}
+  .fstl-modal-body{padding:24px 28px 28px;}
+  .fstl-field{margin-bottom:16px;}
+  .fstl-field label{display:block; font-size:11px; font-weight:800; color:var(--fink); margin-bottom:7px; text-transform:uppercase; letter-spacing:.04em;}
+  .fstl-field input:not([type="checkbox"]), .fstl-field textarea{width:100%; box-sizing:border-box; border:1.5px solid #e5ddff; border-radius:13px; padding:11px 14px; font-size:13px; background:white; font-family:'Plus Jakarta Sans',sans-serif;}
+  .fstl-field input:focus:not([type="checkbox"]), .fstl-field textarea:focus{outline:none; border-color:var(--fv); box-shadow:0 0 0 4px var(--fv-soft);}
+  .fstl-field-row{display:flex; gap:10px; align-items:center;}
+  .fstl-field-row input{flex:1;}
+  .fstl-btn-check{background:var(--fink); color:white; border:none; border-radius:13px; padding:0 18px; height:44px; font-weight:800; font-size:12px; cursor:pointer; white-space:nowrap; font-family:'Plus Jakarta Sans',sans-serif; flex-shrink:0; display:inline-flex; align-items:center; justify-content:center; gap:6px;}
+  .fstl-btn-check:hover{background:var(--fv-deep);}
+  .fstl-btn-check:disabled{opacity:.7; cursor:wait;}
+  .fstl-btn-ambil{background:none; border:none; color:var(--fv); font-weight:800; font-size:12.5px; cursor:pointer; display:inline-flex; align-items:center; gap:6px; padding:4px 2px; font-family:'Plus Jakarta Sans',sans-serif; transition:color .15s ease, transform .15s ease;}
+  .fstl-btn-ambil:hover{color:var(--fv-deep); transform:translateY(-1px);}
+  .fstl-btn-ambil:disabled{opacity:.6; cursor:wait; transform:none;}
+  .fstl-spinner{width:13px; height:13px; border:2px solid rgba(109,93,251,.25); border-top-color:var(--fv); border-radius:50%; display:inline-block; animation:spin .65s linear infinite; vertical-align:-2px; flex-shrink:0;}
+  .fstl-spinner.on-dark{border-color:rgba(255,255,255,.35); border-top-color:#fff;}
+  @keyframes fstlShimmer{0%{background-position:-360px 0;} 100%{background-position:360px 0;}}
+  @keyframes fstlPulseBorder{0%,100%{box-shadow:0 0 0 0 rgba(109,93,251,.35);} 50%{box-shadow:0 0 0 4px rgba(109,93,251,0);}}
+  .fstl-loading-shimmer{
+    background:linear-gradient(90deg, #f4f1ff 25%, #e6ddff 40%, #f4f1ff 55%) !important;
+    background-size:360px 100% !important;
+    animation:fstlShimmer 1.2s ease-in-out infinite, fstlPulseBorder 1.2s ease-in-out infinite !important;
+    color:transparent !important; caret-color:transparent;
+  }
+  .fstl-loading-shimmer::placeholder{color:transparent;}
+
+  .fstl-process-picker{display:grid; grid-template-columns:repeat(2,1fr); grid-template-rows:repeat(3,1fr); grid-auto-flow:column; gap:8px;}
+  .fstl-process-chip{position:relative; display:flex; align-items:center; justify-content:flex-start; text-align:left; gap:8px; padding:10px 30px 10px 12px; border-radius:13px; border:1.5px solid #e5ddff; cursor:pointer; font-size:12.5px; font-weight:700; color:var(--fink); background:white; transition:all .15s ease; line-height:1;}
+  .fstl-process-chip .fstl-chip-label{display:inline-flex; align-items:center; justify-content:flex-start; gap:8px; line-height:1;}
+  .fstl-process-chip input{position:absolute; top:8px; right:8px; box-sizing:border-box; border:none; border-radius:4px; padding:0; accent-color:var(--fv); width:16px; height:16px; flex-shrink:0; cursor:pointer; margin:0; display:block;}
+
+  .fstl-rows{display:flex; flex-direction:column; gap:12px; margin-top:14px;}
+  .fstl-row-card{border-radius:15px; padding:14px; border:1.5px solid var(--fv-soft);}
+  .fstl-row-card .rname{font-family:'Plus Jakarta Sans',sans-serif; font-weight:700; font-size:12px; margin-bottom:8px; display:flex; align-items:center; justify-content:space-between; gap:7px;}
+  .fstl-row-card .rname .rname-label{display:flex; align-items:center; gap:7px; min-width:0;}
+  .fstl-expand-btn{
+    background:none; border:1.5px solid currentColor; color:inherit; opacity:.55;
+    width:26px; height:26px; border-radius:8px; font-size:13px; cursor:pointer; flex-shrink:0;
+    display:inline-flex; align-items:center; justify-content:center; transition:all .15s var(--ease); font-family:inherit;
+  }
+  .fstl-expand-btn:hover{opacity:1; background:rgba(0,0,0,.06); transform:scale(1.06);}
+  .fstl-row-card textarea{min-height:56px; resize:vertical; transition:min-height .2s var(--ease);}
+  .fstl-row-card textarea.fstl-ket-expanded{min-height:230px;}
+  .fstl-row-grid{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:8px;}
+
+  .fstl-modal-actions{display:flex; gap:10px; justify-content:flex-end; margin-top:22px;}
+  .fstl-btn-cancel{background:white; color:var(--fink-soft); border:1.5px solid #e5ddff; border-radius:99px; padding:12px 20px; font-weight:700; font-size:12.5px; cursor:pointer;}
+  .fstl-btn-save{background:linear-gradient(120deg,var(--fv),var(--fp)); color:white; border:none; border-radius:99px; padding:12px 26px; font-weight:800; font-size:12.5px; cursor:pointer; font-family:'Plus Jakarta Sans',sans-serif; box-shadow:0 10px 22px -8px rgba(109,93,251,.6);}
+  .fstl-btn-save:hover{transform:translateY(-2px);}
+  .fstl-btn-save:active{transform:translateY(0);}
+
+  /* ============================================================
+     WASTE REWIND — tabel compact seperti halaman Update Stock
+     Header wrap + action detail + modal detail lengkap
+     ============================================================ */
+  .wrw-toolbar{
+    display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+    margin:14px 0 16px;
+  }
+  .wrw-search{
+    flex:1; min-width:230px; max-width:360px; position:relative;
+  }
+  .wrw-search input{
+    width:100%; height:44px; box-sizing:border-box;
+    border:1.5px solid var(--line); border-radius:10px;
+    padding:0 15px 0 40px; background:#fff; color:var(--ink);
+    font-family:inherit; font-size:13px; outline:none;
+    transition:border-color .15s ease, box-shadow .15s ease;
+  }
+  .wrw-search input:focus{
+    border-color:var(--blue-light);
+    box-shadow:0 0 0 4px var(--blue-50);
+  }
+  .wrw-search .ic{
+    position:absolute; left:14px; top:50%; transform:translateY(-50%);
+    font-size:14px; opacity:.65; pointer-events:none;
+  }
+  .wrw-table{
+    width:100%; min-width:1250px; border-collapse:separate; border-spacing:0;
+    font-size:12px; color:var(--ink); table-layout:auto;
+  }
+  .wrw-table thead th{
+    background:#244f80; color:#fff; padding:10px 9px;
+    font-size:11px; font-weight:800; letter-spacing:.01em;
+    text-align:left; vertical-align:middle;
+    white-space:normal; overflow-wrap:anywhere; word-break:break-word;
+    line-height:1.25; height:42px; border:0;
+  }
+  .wrw-table thead th:first-child{border-radius:10px 0 0 0;}
+  .wrw-table thead th:last-child{border-radius:0 10px 0 0; text-align:center;}
+  .wrw-table tbody td{
+    padding:12px 9px; border-bottom:1px solid #edf1f5;
+    vertical-align:top; white-space:normal;
+    overflow-wrap:anywhere; word-break:break-word; line-height:1.35;
+    background:#fff;
+  }
+  .wrw-table tbody tr:hover td{background:#f8fbff;}
+  .wrw-table tbody td:last-child{text-align:center; vertical-align:middle; white-space:nowrap;}
+  .wrw-table th:nth-child(1), .wrw-table td:nth-child(1){min-width:115px;}
+  .wrw-table th:nth-child(2), .wrw-table td:nth-child(2){min-width:85px;}
+  .wrw-table th:nth-child(4), .wrw-table td:nth-child(4){min-width:155px;}
+  .wrw-table th:nth-child(14), .wrw-table td:nth-child(14){min-width:125px;}
+  .wrw-detail-btn{
+    border:1.3px solid #3572b6; background:#fff; color:#1e4573;
+    border-radius:8px; padding:7px 11px; font-family:inherit;
+    font-size:11px; font-weight:800; cursor:pointer; white-space:nowrap;
+    transition:all .15s ease;
+  }
+  .wrw-detail-btn:hover{background:#3572b6; color:#fff; transform:translateY(-1px); box-shadow:0 5px 12px -7px rgba(53,114,182,.8);}
+  .wrw-detail-btn:active{transform:translateY(0);}
+  .wrw-table-wrap, .page .table-wrap:has(.wrw-table){
+    overflow:auto; border:1px solid #e6ebf1; border-radius:11px;
+    background:#fff; max-height:calc(100vh - 285px);
+  }
+  #wrwDetailOverlay{
+    position:fixed; inset:0; z-index:1200; display:none;
+    align-items:center; justify-content:center;
+    padding:22px; background:rgba(15,25,45,.48); backdrop-filter:blur(3px);
+  }
+  .wrw-modal{
+    width:min(900px,96vw); max-height:88vh; overflow:hidden;
+    background:#fff; border-radius:16px; box-shadow:0 25px 70px -20px rgba(10,25,50,.45);
+    display:flex; flex-direction:column; border:1px solid #e7ecf2;
+  }
+  .wrw-modal-head{
+    display:flex; align-items:center; justify-content:space-between; gap:15px;
+    padding:17px 20px; background:#244f80; color:#fff; flex-shrink:0;
+  }
+  .wrw-modal-head h3{font-size:16px; font-weight:800; margin:0;}
+  .wrw-modal-close{
+    width:34px; height:34px; border:1px solid rgba(255,255,255,.35);
+    border-radius:9px; background:rgba(255,255,255,.12); color:#fff;
+    cursor:pointer; font-size:16px; display:flex; align-items:center; justify-content:center;
+  }
+  .wrw-modal-close:hover{background:rgba(255,255,255,.22);}
+  .wrw-detail-grid{
+    overflow:auto; padding:18px; display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr)); gap:0;
+  }
+  .wrw-detail-item{
+    display:grid; grid-template-columns:minmax(150px,42%) 1fr;
+    min-height:44px; border-bottom:1px solid #edf1f5;
+  }
+  .wrw-detail-item .lbl{
+    padding:10px 11px; background:#f5f8fb; color:#36516d;
+    font-size:10.5px; font-weight:800; line-height:1.3;
+    overflow-wrap:anywhere; word-break:break-word;
+  }
+  .wrw-detail-item .val{
+    padding:10px 11px; font-size:12px; color:var(--ink);
+    line-height:1.4; overflow-wrap:anywhere; word-break:break-word;
+  }
+  @media(max-width:900px){
+    .wrw-table{min-width:1050px;}
+    .wrw-detail-grid{grid-template-columns:1fr;}
+  }
+  @media(max-width:600px){
+    .wrw-search{max-width:none; min-width:100%;}
+    .wrw-toolbar .btn-danger-outline,.wrw-toolbar .btn-outline{flex:1; justify-content:center;}
+    #wrwDetailOverlay{padding:10px;}
+    .wrw-modal{width:100%; max-height:92vh; border-radius:13px;}
+    .wrw-detail-item{grid-template-columns:42% 58%;}
+  }
+
+  /* ==========================================================
+     RESPONSIVE / MOBILE
+     Breakpoint utama 860px: di atas itu tampilan desktop APA
+     ADANYA, nggak diubah sama sekali. Di bawah 860px, sidebar
+     yang tadinya selalu nempel (264px) diubah jadi "drawer" yang
+     nongol dari kiri pas hamburger dipencet, biar konten dapet
+     lebar layar penuh.
+     ========================================================== */
+  @media (max-width:860px){
+    .hamburger-btn{display:inline-flex;}
+    .sidebar{
+      position:fixed; top:0; left:0; height:100vh; z-index:900; width:270px;
+      transform:translateX(-100%); transition:transform .25s var(--ease);
+      box-shadow:0 0 40px rgba(10,20,40,.28);
+    }
+    .sidebar.open{transform:translateX(0);}
+    .topbar{padding:0 14px;}
+    .topbar h2{font-size:15px;}
+    .content{padding:16px 14px;}
+    .card{padding:16px;}
+    .fstl-hero{padding:26px 20px;}
+    .login-panel{grid-template-columns:1fr; width:94vw; min-height:0;}
+    .login-brand{padding:26px 24px 20px;}
+    .login-brand h1{font-size:22px; margin-top:14px; max-width:none;}
+    .login-brand p{max-width:none;}
+    .brand-foot{margin-top:18px;}
+    .login-form{padding:28px 24px 32px;}
+  }
+  @media (max-width:480px){
+    .stat-grid{grid-template-columns:repeat(2,1fr);}
+    .stat .value{font-size:21px;}
+    .live-pill{display:none;} /* hemat ruang, judul halaman lebih kebaca */
+    .login-brand{display:none;} /* di layar sekecil ini form login lebih penting daripada copy marketing */
+    .toolbar{gap:8px;}
+    .search-wrap{max-width:none;}
+  }
+
+  @media (max-width:600px){
+    .fstl-process-picker{grid-template-columns:1fr; grid-template-rows:none; grid-auto-flow:row;}
+    .fstl-row-grid{grid-template-columns:1fr;}
+    .fstl-hero{padding:28px 22px;}
+  }
 </style>
 </head>
 <body>
@@ -268,6 +620,72 @@
       <div class="confirm-actions">
         <button class="btn-cancel" onclick="closeSheetModal()">Batal</button>
         <button class="btn-confirm" onclick="saveSheetSelection()">Simpan Pilihan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- WASTE REWIND — MODAL DETAIL SEMUA KOLOM -->
+  <div id="wrwDetailOverlay" onclick="if(event.target===this)closeWasteRewindDetail()">
+    <div class="wrw-modal">
+      <div class="wrw-modal-head">
+        <div><h3 id="wrwDetailTitle">Detail Waste Rewind</h3><div id="wrwDetailSub" style="font-size:11px;opacity:.8;margin-top:3px;"></div></div>
+        <button class="wrw-modal-close" onclick="closeWasteRewindDetail()">✕</button>
+      </div>
+      <div class="wrw-detail-grid" id="wrwDetailGrid"></div>
+    </div>
+  </div>
+
+  <!-- DATA GUDANG — MODAL: PILIH SHEET DARI FILE YANG DIUPLOAD
+       (dulu ada 2 modal: pilih file di folder lokal -> pilih sheet.
+       Sekarang cuma 1 modal ini, karena "pilih file" diganti jadi upload
+       langsung lewat <input type="file"> di kartunya, bukan browse folder
+       lokal -- lihat gudangCardUploadFile().) -->
+  <div id="gudangSheetModalOverlay">
+    <div class="confirm-box sheet-modal-box">
+      <h4>Pilih Sheet — Data Gudang</h4>
+      <p style="font-size:12.5px; color:var(--ink-soft); margin-top:6px;">Pilih sheet/tab yang mau ditarik dari file yang dipilih.</p>
+      <div id="gudangSheetModalList" class="sheet-modal-list"></div>
+      <div class="confirm-actions">
+        <button class="btn-cancel" onclick="closeGudangSheetModal()">Batal</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FSTL — MODAL INPUT/EDIT WASTE (prototipe tampilan) -->
+  <div id="fstlModalOverlay">
+    <div class="fstl-modal fstl-scope">
+      <div class="fstl-modal-head">
+        <button class="fstl-modal-close" onclick="fstlCloseModal()">✕</button>
+        <h3 id="fstlModalTitle">✏️ Catat Waste Baru</h3>
+        <p>Isi detail JO dan proses yang menyumbang waste.</p>
+      </div>
+      <div class="fstl-modal-body">
+        <div class="fstl-field">
+          <label>SPK / JO</label>
+          <div class="fstl-field-row">
+            <input id="fstlJO" placeholder="Contoh: 123/456A">
+            <button class="fstl-btn-check" onclick="fstlCekJO()">🔎 Periksa</button>
+          </div>
+        </div>
+        <div class="fstl-field">
+          <label>Produk</label>
+          <input id="fstlProduk" placeholder="Otomatis terisi setelah periksa JO" readonly style="background:#f4f1ff; color:var(--fink-soft);">
+        </div>
+        <div class="fstl-field">
+          <label>Proses yang bermasalah</label>
+          <div class="fstl-process-picker" id="fstlProcessPicker"></div>
+        </div>
+        <div class="fstl-field">
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+            <label style="margin-bottom:0;">Detail per proses</label>
+            <button type="button" class="fstl-btn-ambil" id="fstlAmbilKetBtn" onclick="fstlCekKeteranganSemua()">📁 Ambil Keterangan</button>
+          </div>
+          <div class="fstl-rows" id="fstlRows"></div>
+        </div>
+        <div class="fstl-modal-actions">
+          <button class="fstl-btn-cancel" onclick="fstlCloseModal()">Batal</button>
+          <button class="fstl-btn-save" id="fstlSaveBtn" onclick="fstlSaveWaste()">💾 Simpan</button>
+        </div>
       </div>
     </div>
   </div>
@@ -299,13 +717,14 @@
   <!-- APP -->
   <div id="app">
     <div class="shell">
+      <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeSidebar()"></div>
       <div class="sidebar">
         <div class="logo-row"><span class="dot"></span><span>KSA SYSTEM</span></div>
         <div class="nav">
           <div class="nav-item active" data-page="dashboard" onclick="go('dashboard', this)"><span class="ic">🏠</span> Dashboard</div>
           <div class="nav-item" data-page="produksi" onclick="go('produksi', this)"><span class="ic">🏭</span> Input Data Produksi</div>
           <div class="nav-item" onclick="toggleGroup('g-validasi')"><span class="ic">✅</span> Validasi</div>
-          <div class="nav-children open" id="g-validasi">
+          <div class="nav-children" id="g-validasi">
             <div class="nav-child" data-page="rekap" onclick="go('rekap', this)">Rekap Data Validasi</div>
             <div class="nav-child" data-page="validasi" onclick="go('validasi', this)">Data Validasi</div>
           </div>
@@ -314,6 +733,17 @@
             <div class="nav-child" data-page="updateStock" onclick="go('updateStock', this)">Update Stock</div>
             <div class="nav-child" data-page="stockBahan" onclick="go('stockBahan', this)">Stock Bahan Baku</div>
           </div>
+          <div class="nav-item" onclick="toggleGroup('g-gudang')"><span class="ic">🏬</span> Gudang</div>
+          <div class="nav-children" id="g-gudang">
+            <div class="nav-child" data-page="gudangBjb" onclick="go('gudangBjb', this)">Data Gudang BJB</div>
+            <div class="nav-child" data-page="gudangBjl" onclick="go('gudangBjl', this)">Data Gudang BJL</div>
+          </div>
+          <div class="nav-item" onclick="toggleGroup('g-fstl')"><span class="ic">🧾</span> FSTL</div>
+          <div class="nav-children" id="g-fstl">
+            <div class="nav-child" data-page="fstlWaste" onclick="go('fstlWaste', this)">Lampiran Waste</div>
+            <div class="nav-child" data-page="wasteRewind" onclick="go('wasteRewind', this)">Waste Rewind</div>
+          </div>
+          <div class="nav-item" data-page="chatbot" onclick="go('chatbot', this)"><span class="ic">💬</span> Tanya JO (Chatbot)</div>
         </div>
         <div class="user-box">
           <div class="avatar" id="avatarInitial">-</div>
@@ -324,7 +754,10 @@
 
       <div class="main">
         <div class="topbar">
-          <h2 id="pageTitle">Dashboard</h2>
+          <div class="topbar-left">
+            <button class="hamburger-btn" onclick="toggleSidebar()" aria-label="Buka menu">☰</button>
+            <h2 id="pageTitle">Dashboard</h2>
+          </div>
           <div class="live-pill"><span class="blip"></span> Live Data</div>
         </div>
         <div class="content" id="content">
@@ -363,6 +796,110 @@
             <div class="produksi-grid" id="produksiGrid">
               <!-- kartu tiap source dirender lewat JS, lihat renderProduksiCards() -->
             </div>
+
+            <!-- Kartu "Data Gudang" & "Update Stock" -- hardcoded (bukan dari
+                 renderProduksiCards()), karena sumbernya upload file langsung
+                 (bukan link+checklist sheet generik). Data Gudang SENGAJA TIDAK
+                 ikut tombol "Refresh Semua" di atas -- eksekusi refresh-nya
+                 sendiri ada di halaman Data Gudang BJB/BJL. Update Stock TETAP
+                 ikut "Refresh Semua" seperti sebelumnya, cuma cara mengisi
+                 sumbernya yang berubah dari link jadi upload file. -->
+            <div class="produksi-grid" style="margin-top:16px;">
+              <div class="card produksi-card" style="margin-bottom:0;">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px;">
+                  <h3>🏬 Data Gudang</h3>
+                  <div class="status-pill off" id="gudangCardPill">⚪ Belum dipilih</div>
+                </div>
+                <p class="desc" style="font-size:11.5px; color:var(--ink-soft); margin-top:4px;">
+                  Sumber file Excel/WPS lokal untuk Gudang BJB & BJL (satu file, dibedakan lewat kolom AREA).
+                  Refresh-nya sendiri ada di halaman Data Gudang BJB / BJL, bukan lewat "Refresh Semua" di atas.
+                </p>
+                <div id="gudangCardInfo" style="font-size:11px; color:var(--ink-faint); margin-top:6px;">Belum ada file/sheet dipilih.</div>
+
+                <div class="upload-drop" id="gudangDropZone" tabindex="0" role="button" aria-label="Upload file Excel Data Gudang" style="margin-top:10px;">
+                  <input type="file" id="gudangFileUploadInput" accept=".xlsx,.xls" hidden>
+                  <div class="upload-drop-icon">📤</div>
+                  <div class="upload-drop-text" id="gudangDropZoneText"><b>Pilih file</b> atau tarik &amp; lepas ke sini</div>
+                  <div class="upload-drop-sub" id="gudangDropZoneSub">.xlsx / .xls</div>
+                </div>
+              </div>
+
+              <div class="card produksi-card" style="margin-bottom:0;">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px;">
+                  <h3>📦 Update Stock</h3>
+                  <div class="status-pill off" id="updateStockCardPill">⚪ Belum dipilih</div>
+                </div>
+                <p class="desc" style="font-size:11.5px; color:var(--ink-soft); margin-top:4px;">
+                  Sumber file Excel blok PL/PET/CPPM dst untuk Monitor Bahan Baku. Ikut tombol "Refresh Semua" di atas.
+                </p>
+                <div id="updateStockCardInfo" style="font-size:11px; color:var(--ink-faint); margin-top:6px;">Belum ada file dipilih.</div>
+
+                <div class="upload-drop" id="updateStockDropZone" tabindex="0" role="button" aria-label="Upload file Excel Update Stock" style="margin-top:10px;">
+                  <input type="file" id="updateStockFileUploadInput" accept=".xlsx,.xls" hidden>
+                  <div class="upload-drop-icon">📤</div>
+                  <div class="upload-drop-text" id="updateStockDropZoneText"><b>Pilih file</b> atau tarik &amp; lepas ke sini</div>
+                  <div class="upload-drop-sub" id="updateStockDropZoneSub">.xlsx / .xls</div>
+                </div>
+
+                <div style="margin-top:10px;">
+                  <button class="btn-outline btn-sheet" onclick="openSheetModal('update_stock')">📋 Pilih Sheet</button>
+                </div>
+                <div class="sheet-summary" id="updateStockSheetSummary" style="margin-top:8px;">Belum ada sheet dicentang</div>
+              </div>
+
+              <!-- Kartu "Form Serah Terima 2" & "Validasi 2" -- sumber KEDUA/
+                   tambahan (terpisah dari import_form_st.py & import_val.py lama
+                   di halaman Data Validasi). Alurnya PERSIS sama seperti kartu
+                   "Update Stock" di atas (upload file -> centang banyak sheet
+                   lewat modal "Pilih Sheet"), tapi TIDAK ikut "Refresh Semua" --
+                   keduanya dijalankan otomatis bareng import Gudang tiap kali
+                   tombol Refresh di halaman Data Gudang BJB/BJL diklik. -->
+              <div class="card produksi-card" style="margin-bottom:0;">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px;">
+                  <h3>🤝 Form Serah Terima 2</h3>
+                  <div class="status-pill off" id="formSt2CardPill">⚪ Belum dipilih</div>
+                </div>
+                <p class="desc" style="font-size:11.5px; color:var(--ink-soft); margin-top:4px;">
+                  Sumber file Excel blok kedua untuk Form Serah Terima. Ikut jalan otomatis tiap Refresh di halaman Data Gudang BJB/BJL, bukan lewat "Refresh Semua" di atas.
+                </p>
+                <div id="formSt2CardInfo" style="font-size:11px; color:var(--ink-faint); margin-top:6px;">Belum ada file dipilih.</div>
+
+                <div class="upload-drop" id="formSt2DropZone" tabindex="0" role="button" aria-label="Upload file Excel Form Serah Terima 2" style="margin-top:10px;">
+                  <input type="file" id="formSt2FileUploadInput" accept=".xlsx,.xls" hidden>
+                  <div class="upload-drop-icon">📤</div>
+                  <div class="upload-drop-text" id="formSt2DropZoneText"><b>Pilih file</b> atau tarik &amp; lepas ke sini</div>
+                  <div class="upload-drop-sub" id="formSt2DropZoneSub">.xlsx / .xls</div>
+                </div>
+
+                <div style="margin-top:10px;">
+                  <button class="btn-outline btn-sheet" onclick="openSheetModal('form_st_2')">📋 Pilih Sheet</button>
+                </div>
+                <div class="sheet-summary" id="formSt2SheetSummary" style="margin-top:8px;">Belum ada sheet dicentang</div>
+              </div>
+
+              <div class="card produksi-card" style="margin-bottom:0;">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px;">
+                  <h3>✅ Validasi 2</h3>
+                  <div class="status-pill off" id="val2CardPill">⚪ Belum dipilih</div>
+                </div>
+                <p class="desc" style="font-size:11.5px; color:var(--ink-soft); margin-top:4px;">
+                  Sumber file Excel blok kedua untuk Validasi. Ikut jalan otomatis tiap Refresh di halaman Data Gudang BJB/BJL, bukan lewat "Refresh Semua" di atas.
+                </p>
+                <div id="val2CardInfo" style="font-size:11px; color:var(--ink-faint); margin-top:6px;">Belum ada file dipilih.</div>
+
+                <div class="upload-drop" id="val2DropZone" tabindex="0" role="button" aria-label="Upload file Excel Validasi 2" style="margin-top:10px;">
+                  <input type="file" id="val2FileUploadInput" accept=".xlsx,.xls" hidden>
+                  <div class="upload-drop-icon">📤</div>
+                  <div class="upload-drop-text" id="val2DropZoneText"><b>Pilih file</b> atau tarik &amp; lepas ke sini</div>
+                  <div class="upload-drop-sub" id="val2DropZoneSub">.xlsx / .xls</div>
+                </div>
+
+                <div style="margin-top:10px;">
+                  <button class="btn-outline btn-sheet" onclick="openSheetModal('val_2')">📋 Pilih Sheet</button>
+                </div>
+                <div class="sheet-summary" id="val2SheetSummary" style="margin-top:8px;">Belum ada sheet dicentang</div>
+              </div>
+            </div>
           </div>
 
           <div class="page" id="page-rekap" style="display:none">
@@ -376,7 +913,7 @@
               </div>
               <div class="table-wrap">
               <table>
-                <thead><tr><th>Tanggal</th><th>JO</th><th>Nama</th><th>Order</th><th>Slitting</th><th>Total</th><th>Selisih</th><th>Konfirmasi</th></tr></thead>
+                <thead><tr><th>Tanggal</th><th>JO</th><th>Nama</th><th>Order</th><th>Slitting</th><th>Total</th><th>Selisih</th><th>Konfirmasi</th><th>Status OK (Manual)</th></tr></thead>
                 <tbody id="tblRekap"></tbody>
               </table>
               </div>
@@ -408,9 +945,17 @@
                 <button class="btn-danger-outline" onclick="document.getElementById('txtCariUpdateStock').value='';renderUpdateStock()">✖ Reset</button>
                 <button class="btn-outline" id="btnRefreshUpdateStock" onclick="loadUpdateStock(true)"><svg class="ic ic-refresh" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><polyline points="21 3 21 9 15 9"/></svg> Refresh</button>
               </div>
+              <div class="toolbar" style="margin-top:-6px">
+                <div class="us-filter-group" id="usFilterGroup">
+                  <button type="button" class="us-filter-chip active" data-filter="all" onclick="setUpdateStockFilter('all')">Semua</button>
+                  <button type="button" class="us-filter-chip" data-filter="pending" onclick="setUpdateStockFilter('pending')">Belum Kirim</button>
+                  <button type="button" class="us-filter-chip" data-filter="acc" onclick="setUpdateStockFilter('acc')">Sudah ACC</button>
+                </div>
+                <button class="btn-mini acc" id="btnBulkAccUpdateStock" style="display:none; padding:11px 16px; font-size:12.5px;" onclick="bulkAccUpdateStock()">ACC Terpilih (<span id="usSelectedCount">0</span>)</button>
+              </div>
               <div class="table-wrap">
-              <table>
-                <thead><tr><th>JO</th><th>Nama</th><th>Order</th><th>Meter Order</th><th>Meter Validasi</th><th>Lapisan Order</th><th>Lapisan Validasi</th><th>ACC</th></tr></thead>
+              <table id="tblUpdateStockTable">
+                <thead><tr><th style="width:34px"><input type="checkbox" id="chkAllUpdateStock" onchange="toggleSelectAllUpdateStock(this.checked)"></th><th>JO</th><th>Nama</th><th>Order</th><th>Meter Order</th><th>Meter Validasi</th><th>Lapisan Order</th><th>Lapisan Validasi</th><th>Keterangan</th><th>ACC</th></tr></thead>
                 <tbody id="tblUpdateStock"></tbody>
               </table>
               </div>
@@ -434,6 +979,122 @@
             </div>
           </div>
 
+          <!-- ==================== GUDANG BJB / BJL ====================
+               Tidak ada input folder di sini lagi -- folder/file/sheet
+               dipilih dari kartu "Data Gudang" di halaman Input Data
+               Produksi. Di sini cuma status + tombol Refresh yang
+               menjalankan proses tarik-data (sama untuk BJB & BJL,
+               keduanya menulis ke tab "API" yang sama, dibedakan lewat
+               kolom AREA). -->
+          <div class="page" id="page-gudangBjb" style="display:none">
+            <div class="card">
+              <h3>🏬 Data Gudang BJB</h3>
+              <p class="desc" style="font-size:12.5px; color:var(--ink-soft); margin-top:4px;">
+                Menampilkan data Gudang area BJB. Folder/file/sheet sumbernya diatur lewat kartu
+                <b>"Data Gudang"</b> di halaman Input Data Produksi. Tombol Refresh di sini menjalankan
+                3 proses sekaligus: Gudang (+ klasifikasi BJB/BJL), <b>Form Serah Terima 2</b>, dan
+                <b>Validasi 2</b> — terpisah dari "Refresh Semua" di halaman itu.
+              </p>
+              <div id="gudangSourceInfo-gudangBjb" style="font-size:11.5px; color:var(--ink-soft); margin-top:10px;"></div>
+              <div id="gudangStatus-gudangBjb" style="font-size:11px; color:var(--ink-faint); margin-top:4px;">Memuat status...</div>
+
+              <div style="margin-top:16px;">
+                <button class="btn-outline" id="gudangBtnRefresh-gudangBjb" style="border-color:var(--ok); color:var(--ok);" onclick="gudangRefresh('gudangBjb')">
+                  <svg class="ic ic-refresh" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><polyline points="21 3 21 9 15 9"/></svg>
+                  Refresh
+                </button>
+              </div>
+              <div id="gudangResult-gudangBjb" style="margin-top:10px; font-size:12.5px;"></div>
+            </div>
+          </div>
+
+          <div class="page" id="page-gudangBjl" style="display:none">
+            <div class="card">
+              <h3>🏬 Data Gudang BJL</h3>
+              <p class="desc" style="font-size:12.5px; color:var(--ink-soft); margin-top:4px;">
+                Menampilkan data Gudang area BJL. Folder/file/sheet sumbernya diatur lewat kartu
+                <b>"Data Gudang"</b> di halaman Input Data Produksi. Tombol Refresh di sini menjalankan
+                3 proses sekaligus: Gudang (+ klasifikasi BJB/BJL), <b>Form Serah Terima 2</b>, dan
+                <b>Validasi 2</b> — terpisah dari "Refresh Semua" di halaman itu.
+              </p>
+              <div id="gudangSourceInfo-gudangBjl" style="font-size:11.5px; color:var(--ink-soft); margin-top:10px;"></div>
+              <div id="gudangStatus-gudangBjl" style="font-size:11px; color:var(--ink-faint); margin-top:4px;">Memuat status...</div>
+
+              <div style="margin-top:16px;">
+                <button class="btn-outline" id="gudangBtnRefresh-gudangBjl" style="border-color:var(--ok); color:var(--ok);" onclick="gudangRefresh('gudangBjl')">
+                  <svg class="ic ic-refresh" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><polyline points="21 3 21 9 15 9"/></svg>
+                  Refresh
+                </button>
+              </div>
+              <div id="gudangResult-gudangBjl" style="margin-top:10px; font-size:12.5px;"></div>
+            </div>
+          </div>
+
+          <!-- ==================== FSTL — LAMPIRAN WASTE (prototipe tampilan) ==================== -->
+          <div class="page" id="page-fstlWaste" style="display:none">
+            <div class="fstl-scope">
+              <div class="fstl-hero">
+                <span class="fstl-hero-eyebrow"><span class="dot"></span> Modul FSTL · Prototipe Tampilan</span>
+                <h1 class="fstl-display">Lampiran waste, dicatat dalam hitungan detik.</h1>
+                <p>Tandai proses yang menyumbang waste per JO, kasih keterangan &amp; action plan-nya, biar semua tim bisa lihat progress-nya. Cek JO &amp; keterangan otomatis diambil dari Sheets, dan tersimpan ke sheet <code>{USERNAME}_Kitir</code> masing-masing.</p>
+                <div class="fstl-hero-actions">
+                  <button class="fstl-btn fstl-btn-solid" onclick="fstlOpenModal()">✏️ Catat Waste Baru</button>
+                  <button class="fstl-btn fstl-btn-ghost" onclick="fstlOpenBulanModal()">📅 <span id="fstlBulanLabel">Semua Bulan</span></button>
+                </div>
+              </div>
+
+              <div class="fstl-toolbar">
+                <div class="fstl-search"><span class="ic">🔍</span><input id="fstlSearch" placeholder="Cari JO atau produk..." oninput="renderFstlWasteGrid()"></div>
+                <div class="fstl-toolbar" id="fstlFilterUserRow" style="gap:8px; margin:0;"></div>
+              </div>
+
+              <div class="fstl-grid" id="fstlGrid"></div>
+            </div>
+          </div>
+
+          <div class="page" id="page-wasteRewind" style="display:none">
+            <div class="card">
+              <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:4px;">
+                <div>
+                  <h3>♻️ Waste Rewind</h3>
+                  <p class="desc" style="font-size:12.5px;color:var(--ink-soft);margin-top:4px;">Data dari spreadsheet REWIND_PY. Tabel menampilkan kolom utama, tombol Detail menampilkan seluruh kolom.</p>
+                </div>
+              </div>
+              <div class="wrw-toolbar">
+                <div class="wrw-search"><span class="ic">🔍</span><input id="wrwSearch" placeholder="Cari JO / SPK / Produk..." oninput="renderWasteRewind()"></div>
+                <button class="btn-danger-outline" onclick="document.getElementById('wrwSearch').value='';renderWasteRewind()">✖ Reset</button>
+                <button class="btn-outline" id="wrwRefreshBtn" onclick="loadWasteRewind(true)" title="Muat ulang tampilan dari sheet REWIND_PY"><svg class="ic ic-refresh" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><polyline points="21 3 21 9 15 9"/></svg> Refresh</button>
+                <button class="btn-outline rwk-refresh-btn" id="btnRefreshRewindKecil" onclick="runRewindKecil()" title="Tarik ulang data mentah dari sumber (import_rewind_kecil.py) ke sheet REWIND">↻ Refresh Import Rewind Kecil</button>
+              </div>
+              <div class="rwk-status" id="rewindKecilStatus">Target import: sheet REWIND</div>
+              <pre id="rewindKecilLog" class="run-log rwk-log" style="display:none;"></pre>
+              <div class="table-wrap">
+                <table class="wrw-table">
+                  <thead><tr id="wrwHead"></tr></thead>
+                  <tbody id="wrwBody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div class="page" id="page-chatbot" style="display:none">
+            <div class="card" style="display:flex; flex-direction:column; height:70vh;">
+              <h3 style="margin-bottom:4px;">💬 Tanya JO</h3>
+              <p style="color:var(--ink-soft); font-size:13px; margin-bottom:10px;">
+                Tanya bebas soal satu nomor JO, misal: <em>"JO 2412 diproses di mesin apa saja dan berapa hasilnya, lalu sisa stocknya berapa?"</em>
+              </p>
+              <div id="chatLog" style="flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:10px; padding:6px 2px;"></div>
+              <div class="chat-inputbar">
+                <input id="chatInput" placeholder="Tulis pertanyaan lalu Enter..."
+                  onkeydown="if(event.key==='Enter') chatSend();"
+                  oninput="document.getElementById('chatSendBtn').disabled = !this.value.trim();">
+                <button class="chat-send-btn" id="chatSendBtn" onclick="chatSend()" aria-label="Kirim" disabled>
+                  <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M3.4 20.6L21 12 3.4 3.4 3.4 10 15 12 3.4 14z" fill="currentColor"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+
         </div>
         <div class="footnote"><span class="dot"></span> Terhubung ke <span id="apiBaseLabel"></span></div>
       </div>
@@ -441,11 +1102,115 @@
   </div>
 
 <script>
-  const API_BASE = "https://tesksa.onrender.com"; // ganti kalau backend sudah online
-  document.getElementById("apiBaseLabel").innerText = API_BASE;
+  // Kosong ("") berarti fetch("${API_BASE}/api/...") otomatis manggil ke
+  // domain yang sama tempat halaman ini dibuka -- jadi otomatis pas dites
+  // di komputer sendiri (backend jalan bareng index.html di localhost)
+  // MAUPUN pas sudah online di Render (backend & frontend satu domain,
+  // krn app.py yang nyajiin index.html ini juga). Nggak perlu diganti-ganti
+  // manual lagi tiap pindah dari lokal ke online.
+  const API_BASE = "";
+  document.getElementById("apiBaseLabel").innerText = window.location.origin;
 
   let currentUser = null;
   let dataValidasi = [], dataUpdateStock = [], dataStockBahan = [];
+
+  // ---------------- AKSES HALAMAN PER ROLE ----------------
+  // Value ROLE di sini HARUS PERSIS sama dengan kolom ROLE di sheet "Login"
+  // (case-sensitive: "Admin", bukan "admin").
+  //   null       = boleh akses SEMUA halaman (dipakai buat Admin).
+  //   [...]      = daftar "page" (samain sama value data-page di sidebar)
+  //                yang boleh diakses, sisanya otomatis kekunci.
+  // Role yang BELUM didaftarkan di sini otomatis KEKUNCI SEMUA (deny by
+  // default) -- biar kalau nanti ada role baru ditambah di sheet Login tapi
+  // lupa diatur di sini, dia nggak diam-diam dapat akses penuh.
+  const ROLE_PAGE_ACCESS = {
+    "Admin": null,
+    "FSTL": ["produksi", "fstlWaste", "wasteRewind", "chatbot"],
+  };
+
+  function isPageAllowed(page, role){
+    if(!ROLE_PAGE_ACCESS.hasOwnProperty(role)) return false;
+    const allowed = ROLE_PAGE_ACCESS[role];
+    return allowed === null || allowed.includes(page);
+  }
+
+  // Dipanggil sekali abis login sukses. Nge-toggle class "nav-disabled" di
+  // tiap item sidebar yang punya [data-page] sesuai boleh/nggaknya role ini
+  // akses halaman itu -- item TETAP KELIHATAN, cuma nggak bisa diklik
+  // (lihat CSS .nav-disabled: pointer-events:none). Header grup (Validasi/
+  // Monitor Bahan Baku/Gudang/FSTL) ikut dikunci HANYA kalau SEMUA child di
+  // dalamnya juga terkunci, biar grup yang masih punya minimal 1 halaman
+  // yang boleh diakses tetap bisa dibuka/ditutup normal.
+  function applyRoleAccess(role){
+    document.querySelectorAll("[data-page]").forEach(el=>{
+      const ok = isPageAllowed(el.dataset.page, role);
+      el.classList.toggle("nav-disabled", !ok);
+    });
+    document.querySelectorAll(".nav-children").forEach(group=>{
+      const header = group.previousElementSibling;
+      const anyChildOk = Array.from(group.querySelectorAll("[data-page]"))
+        .some(child => !child.classList.contains("nav-disabled"));
+      if(header && header.classList.contains("nav-item")){
+        header.classList.toggle("nav-disabled", !anyChildOk);
+      }
+    });
+  }
+
+  // Kalau halaman default (dashboard) dikunci buat role ini, arahkan ke
+  // halaman PERTAMA (urutan dari atas ke bawah di sidebar) yang boleh
+  // diakses role tsb, sekalian buka grup-nya kalau halaman itu ada di
+  // dalam grup (mis. FSTL > Lampiran Waste).
+  function goToFirstAllowedPage(role){
+    const candidates = Array.from(document.querySelectorAll(".nav-item[data-page], .nav-child[data-page]"));
+    const target = candidates.find(el => isPageAllowed(el.dataset.page, role));
+    if(!target) return false;
+    if(target.classList.contains("nav-child")){
+      const group = target.closest(".nav-children");
+      if(group) group.classList.add("open");
+    }
+    go(target.dataset.page, target);
+    return true;
+  }
+
+  // ============================================================
+  // RESIZE KOLOM TABEL (kaya Excel) -- generik, dipasang per-tabel
+  // lewat ID-nya. Nge-drag handle tipis di sisi kanan tiap <th>
+  // buat ubah lebar kolom itu (butuh table-layout:fixed, sudah ada
+  // di CSS). Cuma dipasang SEKALI (thead-nya statis di HTML, tidak
+  // ikut di-render ulang tiap loadX()), jadi tidak numpuk handle.
+  // ============================================================
+  function makeColumnsResizable(tableId){
+    const table = document.getElementById(tableId);
+    if(!table) return;
+    const ths = table.querySelectorAll("thead th");
+    ths.forEach((th, idx)=>{
+      if(idx === ths.length - 1) return; // kolom terakhir dibiarkan ngisi sisa ruang
+      th.classList.add("th-resizable");
+      const handle = document.createElement("span");
+      handle.className = "col-resizer";
+      th.appendChild(handle);
+      handle.addEventListener("mousedown", (e)=>{
+        e.preventDefault();
+        const startX = e.pageX;
+        const startWidth = th.getBoundingClientRect().width;
+        handle.classList.add("resizing");
+        document.body.style.cursor = "col-resize";
+        function onMove(ev){
+          const newWidth = Math.max(40, startWidth + (ev.pageX - startX));
+          th.style.width = newWidth + "px";
+        }
+        function onUp(){
+          handle.classList.remove("resizing");
+          document.body.style.cursor = "";
+          document.removeEventListener("mousemove", onMove);
+          document.removeEventListener("mouseup", onUp);
+        }
+        document.addEventListener("mousemove", onMove);
+        document.addEventListener("mouseup", onUp);
+      });
+    });
+  }
+  makeColumnsResizable("tblUpdateStockTable");
 
   // ---------------- TOAST ----------------
   function toast(msg, type="info"){
@@ -509,7 +1274,12 @@
         document.getElementById("role_dashboard").innerText = data.role;
         document.getElementById("avatarInitial").innerText = (data.nama||"?").trim().charAt(0).toUpperCase();
         toast(`Selamat datang, ${data.nama}!`, "success");
-        loadDashboardStats();
+        applyRoleAccess(data.role);
+        if(isPageAllowed("dashboard", data.role)){
+          loadDashboardStats();
+        } else if(!goToFirstAllowedPage(data.role)){
+          toast("Role kamu belum diatur akses halamannya. Hubungi admin.", "error");
+        }
       } else {
         errEl.innerText = data.pesan || "Login gagal";
       }
@@ -528,22 +1298,128 @@
     document.getElementById("txt_pass").value = "";
   }
 
+  // ---------------- SIDEBAR (mobile drawer) ----------------
+  function openSidebar(){
+    document.querySelector(".sidebar").classList.add("open");
+    document.getElementById("sidebarBackdrop").classList.add("show");
+  }
+  function closeSidebar(){
+    document.querySelector(".sidebar").classList.remove("open");
+    document.getElementById("sidebarBackdrop").classList.remove("show");
+  }
+  function toggleSidebar(){
+    document.querySelector(".sidebar").classList.contains("open") ? closeSidebar() : openSidebar();
+  }
+
   // ---------------- NAVIGASI ----------------
   function toggleGroup(id){ document.getElementById(id).classList.toggle("open"); }
 
   function go(page, el){
+    if(currentUser && !isPageAllowed(page, currentUser.role)){
+      toast("Kamu tidak punya akses ke halaman ini", "error");
+      return;
+    }
+    closeSidebar(); // di HP, abis pilih menu drawer-nya otomatis nutup biar konten kebuka penuh
     document.querySelectorAll(".nav-item, .nav-child").forEach(n=>n.classList.remove("active"));
     el.classList.add("active");
     document.querySelectorAll(".page").forEach(p=>p.style.display="none");
     const pg = document.getElementById("page-"+page);
     pg.style.display="block"; pg.style.animation="none"; pg.offsetHeight; pg.style.animation="fadeUp .3s var(--ease)";
-    const titles = { dashboard:"Dashboard", produksi:"Input Data Produksi", rekap:"Rekap Data Validasi", validasi:"Data Validasi", updateStock:"Update Stock Bahan Baku", stockBahan:"Stock Bahan Baku" };
+    const titles = { dashboard:"Dashboard", produksi:"Input Data Produksi", rekap:"Rekap Data Validasi", validasi:"Data Validasi", updateStock:"Update Stock Bahan Baku", stockBahan:"Stock Bahan Baku", gudangBjb:"Data Gudang BJB", gudangBjl:"Data Gudang BJL", fstlWaste:"FSTL — Lampiran Waste", wasteRewind:"Waste Rewind", chatbot:"Tanya JO (Chatbot)" };
     document.getElementById("pageTitle").innerText = titles[page];
-    if(page === "produksi") loadProduksiSources();
+    if(page === "produksi"){ loadProduksiSources(); loadGudangCardInfo(); loadUpdateStockSourceCard(); loadFormSt2SourceCard(); loadVal2SourceCard(); }
     if(page === "validasi") loadValidasi();
     if(page === "rekap"){ loadPIC(); loadRekap(); }
     if(page === "updateStock") loadUpdateStock();
     if(page === "stockBahan") loadStockBahan();
+    if(page === "gudangBjb") loadGudangStatus("gudangBjb");
+    if(page === "gudangBjl") loadGudangStatus("gudangBjl");
+    if(page === "fstlWaste") fstlLoadList();
+    if(page === "wasteRewind") loadWasteRewind();
+    if(page === "chatbot") chatInit();
+  }
+
+  // ---------------- CHATBOT "TANYA JO" ----------------
+  let chatInited = false;
+  let chatSessionId = null;
+  function chatInit(){
+    if(chatInited) return;
+    chatInited = true;
+    chatSessionId = "web_" + Date.now() + "_" + Math.random().toString(36).slice(2);
+    chatAppend("bot", "Halo! Tanya bebas soal JO, misal: \"no lot bahan JO 2412 pas printing apa?\" atau \"JO 2412 diproses di mesin apa saja dan berapa hasilnya, lalu sisa stocknya berapa?\"");
+  }
+  function chatFormat(text){
+    // escape dulu biar aman dari HTML asing, baru render markdown ringan:
+    // **bold**, bullet "- ", dan tabel (| kolom | kolom |) jadi HTML.
+    // Ini pola-pola yang dipakai AI di jawabannya.
+    const escaped = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    const inline = s => s.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+    const isTableRow = line => /^\s*\|.*\|\s*$/.test(line);
+    const isSeparatorRow = line => /^\s*\|?\s*:?-{1,}:?\s*(\|\s*:?-{1,}:?\s*)+\|?\s*$/.test(line);
+    const splitCells = line => {
+      let l = line.trim();
+      if(l.startsWith("|")) l = l.slice(1);
+      if(l.endsWith("|")) l = l.slice(0, -1);
+      return l.split("|").map(c => c.trim());
+    };
+
+    const lines = escaped.split("\n");
+    let html = "";
+    let i = 0;
+    while(i < lines.length){
+      if(isTableRow(lines[i]) && i + 1 < lines.length && isSeparatorRow(lines[i + 1])){
+        const headerCells = splitCells(lines[i]);
+        i += 2;
+        const bodyRows = [];
+        while(i < lines.length && isTableRow(lines[i])){
+          bodyRows.push(splitCells(lines[i]));
+          i++;
+        }
+        html += '<div class="chat-table-wrap"><table class="chat-table"><thead><tr>' +
+          headerCells.map(h => `<th>${inline(h)}</th>`).join("") +
+          '</tr></thead><tbody>' +
+          bodyRows.map(r => '<tr>' + r.map(c => `<td>${inline(c)}</td>`).join("") + '</tr>').join("") +
+          '</tbody></table></div>';
+        continue;
+      }
+      html += inline(lines[i]) + (i < lines.length - 1 ? "\n" : "");
+      i++;
+    }
+    return html;
+  }
+  function chatAppend(role, text){
+    const log = document.getElementById("chatLog");
+    const bubble = document.createElement("div");
+    const hasTable = role !== "user" && /^\s*\|.*\|\s*$/m.test(text || "");
+    const maxWidth = hasTable ? "96%" : "80%";
+    bubble.style.cssText = role === "user"
+      ? `align-self:flex-end; background:linear-gradient(135deg,var(--blue-light),var(--blue-dark)); color:#fff; padding:10px 14px; border-radius:14px 14px 2px 14px; max-width:${maxWidth}; white-space:pre-wrap; font-size:13px;`
+      : `align-self:flex-start; background:var(--bg-soft,#f1f2f6); color:var(--ink,#1a1a1a); padding:10px 14px; border-radius:14px 14px 14px 2px; max-width:${maxWidth}; white-space:pre-wrap; font-size:13px;`;
+    bubble.innerHTML = chatFormat(text);
+    log.appendChild(bubble);
+    log.scrollTop = log.scrollHeight;
+    return bubble;
+  }
+  async function chatSend(){
+    const input = document.getElementById("chatInput");
+    const message = input.value.trim();
+    if(!message) return;
+    chatAppend("user", message);
+    input.value = "";
+    const thinking = chatAppend("bot", "Mengecek data...");
+    try{
+      const res = await fetch(`${API_BASE}/api/chatbot/ask`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message, session_id: chatSessionId }),
+      });
+      const data = await res.json();
+      const answer = data.answer || "Maaf, belum ada jawaban.";
+      if(/^\s*\|.*\|\s*$/m.test(answer)) thinking.style.maxWidth = "96%";
+      thinking.innerHTML = chatFormat(answer);
+    }catch(e){
+      thinking.innerHTML = chatFormat("Gagal menghubungi server: " + e.message);
+    }
   }
 
   async function loadDashboardStats(){
@@ -563,6 +1439,21 @@
     if(spin && btn) btn.classList.add("spinning");
     tbody.innerHTML = skeletonRows(10);
     try{
+      // Tombol Refresh (spin=true): jalankan dulu import_val.py & import_form_st.py
+      // di backend supaya tab VAL_1 / FORM_ST_1 ter-update, baru ambil data.
+      if(spin){
+        try{
+          const impRes = await fetch(`${API_BASE}/api/validasi/refresh-import`, { method:"POST" });
+          const impData = await impRes.json();
+          if(!impData.success){
+            const gagal = (impData.results || []).filter(r => r.status !== "OK").map(r => r.script).join(", ");
+            toast(`Sebagian import gagal (${gagal || "cek log server"}), data tetap dimuat`, "error");
+          }
+        } catch(e){
+          toast("Gagal menjalankan import VAL/Form ST, data tetap dimuat", "error");
+        }
+      }
+
       const res = await fetch(`${API_BASE}/api/validasi`);
       dataValidasi = await res.json();
       renderValidasi();
@@ -589,16 +1480,82 @@
   }
 
   // ---------------- REKAP ----------------
+  // Helper murni buat gabung angka kolom I (VALIDASI) + J (FORM SERAH
+  // TERIMA) -- REPLIKA PERSIS logika _combine_number_terms() /
+  // _parse_flexible_number() / _strip_unit_suffix() / _format_number()
+  // di import_engine.py (backend), supaya Total di Rekap dihitung sendiri
+  // di sini, BUKAN dari kolom K sheet Validasi.
+  function parseFlexibleNumber(text){
+    if(text === null || text === undefined) return null;
+    text = String(text).trim();
+    if(text === "" || text === "-") return null;
+    text = text.replace(/\s+/g, "");
+    if(text.includes(",") && text.includes(".")){
+      // titik = pemisah ribuan, koma = desimal
+      text = text.replace(/\./g, "").replace(",", ".");
+    } else if(text.includes(",")){
+      text = text.replace(",", ".");
+    } else if(text.includes(".")){
+      // tidak ada koma sama sekali -> titik pasti pemisah ribuan
+      text = text.replace(/\./g, "");
+    }
+    const val = parseFloat(text);
+    return Number.isNaN(val) ? null : val;
+  }
+  function formatNumberID(value){
+    if(value === null || value === undefined) return "0";
+    if(Number.isInteger(value)) return String(value);
+    let formatted = value.toFixed(2).replace(/0+$/, "").replace(/\.$/, "");
+    return formatted.replace(".", ",");
+  }
+  function stripUnitSuffix(text){
+    text = (text || "").trim();
+    const m = text.match(/^[\d.,]+/);
+    return m ? m[0] : text;
+  }
+  function combineNumberTerms(terms){
+    let total = 0, haveTotal = false;
+    const lengthGroups = new Map(); // panjang_clean -> jumlah count
+    for(const raw of terms){
+      if(raw === null || raw === undefined) continue;
+      for(let part of String(raw).split("+")){
+        part = part.trim();
+        if(!part) continue;
+        if(part.includes("@")){
+          const idx = part.indexOf("@");
+          const countText = part.slice(0, idx).trim();
+          const panjangText = part.slice(idx + 1).trim();
+          const countVal = parseFlexibleNumber(stripUnitSuffix(countText));
+          const panjangClean = stripUnitSuffix(panjangText) || panjangText;
+          if(countVal === null) continue;
+          lengthGroups.set(panjangClean, (lengthGroups.get(panjangClean) || 0) + countVal);
+        } else {
+          const numVal = parseFlexibleNumber(stripUnitSuffix(part));
+          if(numVal === null) continue;
+          total += numVal;
+          haveTotal = true;
+        }
+      }
+    }
+    const partsOut = [];
+    if(haveTotal) partsOut.push(formatNumberID(total));
+    for(const [panjangText, sumVal] of lengthGroups) partsOut.push(`${formatNumberID(sumVal)}@${panjangText}`);
+    return partsOut.join(" + ");
+  }
+
   async function loadRekap(spin){
     const tbody = document.getElementById("tblRekap");
     const btn = document.getElementById("btnRefreshRekap");
     if(spin && btn) btn.classList.add("spinning");
-    tbody.innerHTML = skeletonRows(8);
+    tbody.innerHTML = skeletonRows(9);
     try{
       const res = await fetch(`${API_BASE}/api/validasi`);
       const data = await res.json();
       const belumOk = data.filter(r => Number(r.selisih) !== 0 && String(r.status||"").toUpperCase().trim() !== "OK");
-      if(belumOk.length === 0){ tbody.innerHTML = emptyState(8, "Tidak ada selisih — semua aman 🎉", "🎉"); return; }
+      if(belumOk.length === 0){ tbody.innerHTML = emptyState(9, "Tidak ada selisih — semua aman 🎉", "🎉"); return; }
+      // Total di Rekap dihitung SENDIRI dari kolom I (validasi) + J
+      // (serahTerima) -- BUKAN dari r.total (kolom K sheet Validasi).
+      belumOk.forEach(r => { r.total = combineNumberTerms([r.validasi, r.serahTerima]); });
       let html = "";
       belumOk.forEach((r,i)=>{
         html += `<tr class="row-in" style="animation-delay:${Math.min(i*22,300)}ms">
@@ -606,12 +1563,13 @@
           <td>${r.slitting||""}</td><td>${r.total||""}</td>
           <td style="font-weight:700; color:var(--warn)">${r.selisih}</td>
           <td><button class="btn-mini wa" onclick='kirimWA(${JSON.stringify(r)})'>📩 Kirim Pesan</button></td>
+          <td><button class="btn-mini okmanual" onclick='okManual(${JSON.stringify(r)})'>✓ OK</button></td>
         </tr>`;
       });
       tbody.innerHTML = html;
       if(spin) toast("Rekap diperbarui", "success");
     } catch(e){
-      tbody.innerHTML = emptyState(8, "Gagal memuat data.", "⚠️");
+      tbody.innerHTML = emptyState(9, "Gagal memuat data.", "⚠️");
     } finally { if(btn) btn.classList.remove("spinning"); }
   }
 
@@ -633,54 +1591,176 @@
     window.open("https://wa.me/" + nomor + "?text=" + encodeURIComponent(pesan), "_blank");
   }
 
+  async function okManual(r){
+    const ok = await askConfirm("Status OK (Manual)", `Tandai JO ${r.jo} sebagai OK? Baris ini akan disimpan ke Revisi_Manual dan hilang dari Rekap.`);
+    if(!ok) return;
+    try{
+      const res = await fetch(`${API_BASE}/api/validasi/ok-manual`, {
+        method:"POST", headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({ jo: r.jo })
+      });
+      const result = await res.json();
+      if(result.success){
+        toast(`JO ${r.jo} ditandai OK`, "success");
+        loadRekap();
+      } else {
+        toast("Gagal: " + (result.message || "unknown error"), "error");
+      }
+    } catch(e){ toast("Error: " + e.message, "error"); }
+  }
+
   // ---------------- UPDATE STOCK ----------------
   async function loadUpdateStock(spin){
     const tbody = document.getElementById("tblUpdateStock");
     const btn = document.getElementById("btnRefreshUpdateStock");
     if(spin && btn) btn.classList.add("spinning");
-    tbody.innerHTML = skeletonRows(8);
+    tbody.innerHTML = skeletonRows(10);
     try{
+      // Klik Refresh di halaman ini juga menjalankan import "Update Stock"
+      // (blok kolom PL/PET/CPPM dst -> kolom B-K di spreadsheet Monitor
+      // Bahan Baku, kolom A tidak disentuh) SEBELUM data ditarik ulang.
+      // Kalau importnya gagal (mis. belum Load link / belum pilih sheet
+      // di kartu "Update Stock"), tetap lanjut tarik data lama supaya
+      // tabel tidak kosong, tapi user diberi tahu lewat toast warning.
+      if(spin){
+        try{
+          const impRes = await fetch(`${API_BASE}/api/update-stock/refresh-import`, { method:"POST" });
+          const impData = await impRes.json();
+          if(!impData.success){
+            toast(impData.message || "Import Update Stock gagal, menampilkan data lama", "error");
+          }
+        } catch(e){
+          toast("Import Update Stock gagal: " + e.message, "error");
+        }
+      }
+
       const res = await fetch(`${API_BASE}/api/update-stock`);
       dataUpdateStock = await res.json();
       renderUpdateStock();
       if(spin) toast("Data update stock diperbarui", "success");
     } catch(e){
-      tbody.innerHTML = emptyState(8, "Gagal memuat data.", "⚠️");
+      tbody.innerHTML = emptyState(10, "Gagal memuat data.", "⚠️");
     } finally { if(btn) btn.classList.remove("spinning"); }
   }
+  // Filter (Semua / Belum Kirim / Sudah ACC) -- murni dari field `acc`/`isLocked`
+  // yang sudah ada di data, tidak nambah kolom baru di sheet ataupun tabel data.
+  let updateStockFilter = "all";
+  // JO yang lagi dicentang untuk ACC bulk. Pakai Set supaya tetap kesimpen
+  // walau tabel di-render ulang (search/filter ganti).
+  let selectedUpdateStockJO = new Set();
+
+  function setUpdateStockFilter(mode){
+    updateStockFilter = mode;
+    document.querySelectorAll("#usFilterGroup .us-filter-chip").forEach(btn=>{
+      btn.classList.toggle("active", btn.dataset.filter === mode);
+    });
+    renderUpdateStock();
+  }
+
   function renderUpdateStock(){
     const keyword = (document.getElementById("txtCariUpdateStock").value || "").toLowerCase();
     let rows = dataUpdateStock.filter(r => String(r.jo||"").toLowerCase().includes(keyword) || String(r.nama||"").toLowerCase().includes(keyword));
-    if(rows.length === 0){ document.getElementById("tblUpdateStock").innerHTML = emptyState(8, "Tidak ada data"); return; }
+    if(updateStockFilter === "pending") rows = rows.filter(r => !r.isLocked);
+    else if(updateStockFilter === "acc") rows = rows.filter(r => r.isLocked);
+    // JO yang udah nggak kelihatan (ke-filter/ke-cari keluar) dibuang dari seleksi,
+    // biar tombol "ACC Terpilih" nggak diem-diem masih bawa baris yang nggak keliatan.
+    const visibleJo = new Set(rows.filter(r=>!r.isLocked).map(r=>String(r.jo||"")));
+    selectedUpdateStockJO.forEach(jo => { if(!visibleJo.has(jo)) selectedUpdateStockJO.delete(jo); });
+
+    if(rows.length === 0){ document.getElementById("tblUpdateStock").innerHTML = emptyState(10, "Tidak ada data"); updateBulkAccUI(); return; }
     let html = "";
     rows.forEach((r,i)=>{
-      const accCell = r.isLocked ? `<span class="check-acc">✓</span>` : `<button class="btn-mini acc" onclick='kirimAcc(${JSON.stringify(r)})'>ACC &amp; Kirim</button>`;
+      const jo = String(r.jo||"");
+      const jsonRow = JSON.stringify(r).replace(/'/g, "&#39;");
+      const accCell = r.isLocked ? `<span class="check-acc">✓</span>` : `<button class="btn-mini acc" onclick='kirimAcc(${jsonRow})'>ACC &amp; Kirim</button>`;
+      const checkboxCell = r.isLocked ? "" : `<input type="checkbox" class="chkUpdateStockRow" data-jo="${jo.replace(/"/g,'&quot;')}" onchange="toggleSelectUpdateStock('${jo.replace(/'/g,"\\'")}', this.checked)" ${selectedUpdateStockJO.has(jo) ? "checked" : ""}>`;
       html += `<tr class="row-in" style="animation-delay:${Math.min(i*22,300)}ms">
+        <td style="text-align:center">${checkboxCell}</td>
         <td>${r.jo||""}</td><td>${r.nama||""}</td><td>${r.order||""}</td>
         <td>${r.meterOrder||""}</td><td>${r.meterValidasi||""}</td>
         <td>${r.lapisanOrder||""}</td><td>${r.lapisanValidasi||""}</td>
+        <td>${r.keterangan||""}</td>
         <td style="text-align:center">${accCell}</td>
       </tr>`;
     });
     document.getElementById("tblUpdateStock").innerHTML = html;
+    updateBulkAccUI();
+  }
+
+  function toggleSelectUpdateStock(jo, checked){
+    if(checked) selectedUpdateStockJO.add(jo); else selectedUpdateStockJO.delete(jo);
+    updateBulkAccUI();
+  }
+
+  function toggleSelectAllUpdateStock(checked){
+    document.querySelectorAll("#tblUpdateStock .chkUpdateStockRow").forEach(chk=>{
+      chk.checked = checked;
+      if(checked) selectedUpdateStockJO.add(chk.dataset.jo); else selectedUpdateStockJO.delete(chk.dataset.jo);
+    });
+    updateBulkAccUI();
+  }
+
+  function updateBulkAccUI(){
+    const count = selectedUpdateStockJO.size;
+    const btn = document.getElementById("btnBulkAccUpdateStock");
+    document.getElementById("usSelectedCount").textContent = count;
+    btn.style.display = count > 0 ? "inline-flex" : "none";
+    const chkAll = document.getElementById("chkAllUpdateStock");
+    const rowChecks = document.querySelectorAll("#tblUpdateStock .chkUpdateStockRow");
+    chkAll.checked = rowChecks.length > 0 && Array.from(rowChecks).every(c => c.checked);
+  }
+
+  // Kirim 1 baris ke endpoint ACC yang sudah ada -- dipakai baik dari tombol
+  // ACC per-baris (kirimAcc) maupun dari proses bulk (bulkAccUpdateStock),
+  // supaya keduanya lewat jalur backend yang sama persis, tidak dobel logic.
+  async function sendAccRequest(row){
+    const res = await fetch(`${API_BASE}/api/update-stock/acc`, {
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({...row, user: currentUser ? currentUser.nama : "Tidak diketahui"})
+    });
+    return res.json();
   }
 
   async function kirimAcc(row){
     const ok = await askConfirm("ACC & Kirim Data", `Kirim data JO ${row.jo} ke Stock Bahan Baku? Data akan terkunci setelah ini.`);
     if(!ok) return;
     try{
-      const res = await fetch(`${API_BASE}/api/update-stock/acc`, {
-        method:"POST", headers:{"Content-Type":"application/json"},
-        body: JSON.stringify({...row, user: currentUser ? currentUser.nama : "Tidak diketahui"})
-      });
-      const result = await res.json();
+      const result = await sendAccRequest(row);
       if(result.success){
         toast(`JO ${row.jo} berhasil di-ACC`, "success");
+        selectedUpdateStockJO.delete(String(row.jo||""));
         loadUpdateStock(); loadStockBahan();
       } else {
         toast("Gagal: " + (result.message || "unknown error"), "error");
       }
     } catch(e){ toast("Error: " + e.message, "error"); }
+  }
+
+  async function bulkAccUpdateStock(){
+    const rows = dataUpdateStock.filter(r => !r.isLocked && selectedUpdateStockJO.has(String(r.jo||"")));
+    if(rows.length === 0) return;
+    const ok = await askConfirm("ACC & Kirim Data", `Kirim ${rows.length} JO terpilih ke Stock Bahan Baku sekaligus? Semua baris terpilih akan terkunci setelah ini.`);
+    if(!ok) return;
+
+    const btn = document.getElementById("btnBulkAccUpdateStock");
+    btn.disabled = true;
+    let ok_count = 0, fail = [];
+    for(const row of rows){
+      try{
+        const result = await sendAccRequest(row);
+        if(result.success){ ok_count++; selectedUpdateStockJO.delete(String(row.jo||"")); }
+        else fail.push(row.jo);
+      } catch(e){ fail.push(row.jo); }
+      // Jeda kecil antar request supaya tidak numpuk kena limit Google Sheets
+      // API (baca komentar di app.py soal 429 "requests per minute").
+      await new Promise(r=>setTimeout(r, 400));
+    }
+    btn.disabled = false;
+
+    if(fail.length === 0) toast(`${ok_count} JO berhasil di-ACC`, "success");
+    else toast(`${ok_count} berhasil, gagal: ${fail.join(", ")}`, "error");
+
+    loadUpdateStock(); loadStockBahan();
   }
 
   // ---------------- STOCK BAHAN ----------------
@@ -762,11 +1842,12 @@
             <input class="link-input" id="link-${key}" placeholder="Paste link spreadsheet / Excel Drive...">
             <button class="btn-outline btn-load" onclick="doLoadSource('${key}')" id="btnLoad-${key}">Load</button>
           </div>
-          <div style="display:flex; gap:10px; align-items:center; margin-top:10px; flex-wrap:wrap;">
+          <div style="display:flex; flex-direction:column; gap:8px; margin-top:10px;">
             <button class="btn-outline btn-sheet" onclick="openSheetModal('${key}')">📋 Pilih Sheet</button>
           </div>
           <div class="sheet-summary" style="margin-top:8px;">${sheetSummary}</div>
           <div style="font-size:11px; color:var(--ink-faint); margin-top:8px;">${lastImportLine}</div>
+          ${key === "rewind_kecil" ? `<div style="font-size:11px; color:var(--ink-faint); margin-top:4px;">↻ Refresh Rewind Kecil dipindah ke halaman <b>Waste Rewind</b>.</div>` : ``}
         </div>`;
     });
     grid.innerHTML = html;
@@ -776,9 +1857,16 @@
     if(key.startsWith("printing")) return "🏭";
     if(key.startsWith("dry")) return "🌬️";
     if(key === "rw") return "🔄";
+    if(key === "rewind_kecil") return "🌀";
     if(key === "sl") return "✂️";
     if(key === "sf") return "📎";
     if(key === "ex") return "🧪";
+    if(key === "bag") return "🛍️";
+    if(key === "jo") return "🗂️";
+    if(key === "val") return "✅";
+    if(key === "form_st") return "🤝";
+    if(key === "lp") return "📈";
+    if(key === "update_stock") return "📦";
     return "📄";
   }
 
@@ -811,15 +1899,30 @@
     }
   }
 
+  // "update_stock", "form_st_2" & "val_2" SENGAJA tidak ada di produksiSources
+  // (dikecualikan di app.py, punya kartu upload-file sendiri) -- state-nya
+  // disimpan di variabel terpisah masing2, bukan produksiSources. Dipakai
+  // openSheetModal() & saveSheetSelection() supaya tahu ke variabel mana
+  // harus baca/tulis untuk key ini.
+  const FILE_UPLOAD_SOURCE_KEYS = ["update_stock", "form_st_2", "val_2"];
+  function fileUploadSourceState(key){
+    if(key === "update_stock") return updateStockSource;
+    if(key === "form_st_2") return formSt2Source;
+    if(key === "val_2") return val2Source;
+    return null;
+  }
+
   async function openSheetModal(key){
     activeSheetModalKey = key;
-    const src = produksiSources[key];
+    const isFileUploadSource = FILE_UPLOAD_SOURCE_KEYS.includes(key);
+    const src = isFileUploadSource ? fileUploadSourceState(key) : produksiSources[key];
     document.getElementById("sheetModalTitle").innerText = `Pilih Sheet — ${src.label}`;
     const listEl = document.getElementById("sheetModalList");
 
     let names = detectedSheetsCache[key];
     if(!names){
-      listEl.innerHTML = `<div class="empty" style="padding:20px 8px;">Klik "Load" dulu untuk mendeteksi sheet dari link spreadsheet.</div>`;
+      const hint = isFileUploadSource ? "Upload file dulu" : `Klik "Load" dulu untuk mendeteksi sheet dari link spreadsheet`;
+      listEl.innerHTML = `<div class="empty" style="padding:20px 8px;">${hint}.</div>`;
       document.getElementById("sheetModalOverlay").style.display = "flex";
       return;
     }
@@ -850,9 +1953,23 @@
       });
       const data = await res.json();
       if(data.success){
-        produksiSources[key].sheets = checked;
-        renderProduksiCards();
-        toast(`Sheet untuk "${produksiSources[key].label}" disimpan (${checked.length} dipilih)`, "success");
+        if(key === "update_stock"){
+          updateStockSource.sheets = checked;
+          renderUpdateStockSourceCard();
+          toast(`Sheet untuk "${updateStockSource.label}" disimpan (${checked.length} dipilih)`, "success");
+        } else if(key === "form_st_2"){
+          formSt2Source.sheets = checked;
+          renderFormSt2SourceCard();
+          toast(`Sheet untuk "${formSt2Source.label}" disimpan (${checked.length} dipilih)`, "success");
+        } else if(key === "val_2"){
+          val2Source.sheets = checked;
+          renderVal2SourceCard();
+          toast(`Sheet untuk "${val2Source.label}" disimpan (${checked.length} dipilih)`, "success");
+        } else {
+          produksiSources[key].sheets = checked;
+          renderProduksiCards();
+          toast(`Sheet untuk "${produksiSources[key].label}" disimpan (${checked.length} dipilih)`, "success");
+        }
         closeSheetModal();
       } else {
         toast(data.message || "Gagal menyimpan pilihan sheet", "error");
@@ -908,6 +2025,869 @@
         loadProduksiSources(); // muat ulang status per-card (last_import, last_status, dst.)
       }
     } catch(e){ /* diamkan, coba lagi di polling berikutnya */ }
+  }
+
+  // ==================== REWIND KECIL — REFRESH TERPISAH ====================
+  let rewindKecilPollTimer = null;
+  async function runRewindKecil(){
+    const btn = document.getElementById("btnRefreshRewindKecil");
+    const status = document.getElementById("rewindKecilStatus");
+    const log = document.getElementById("rewindKecilLog");
+    if(!btn) return;
+    try{
+      const res = await fetch(`${API_BASE}/api/produksi/rewind-kecil/run`, {method:"POST"});
+      const data = await res.json();
+      if(!data.success){ toast(data.message || "Refresh Rewind Kecil gagal dimulai", "error"); return; }
+      btn.disabled = true; btn.classList.add("spinning");
+      if(log){ log.style.display="block"; log.textContent="⏳ Menjalankan import_rewind_kecil.py...\n"; }
+      if(status) status.innerText = "⏳ Refresh Rewind Kecil sedang berjalan...";
+      if(rewindKecilPollTimer) clearInterval(rewindKecilPollTimer);
+      rewindKecilPollTimer = setInterval(pollRewindKecil, 1500);
+      pollRewindKecil();
+    }catch(e){ toast("Error: " + e.message, "error"); }
+  }
+  async function pollRewindKecil(){
+    const btn = document.getElementById("btnRefreshRewindKecil");
+    const status = document.getElementById("rewindKecilStatus");
+    const log = document.getElementById("rewindKecilLog");
+    try{
+      const res = await fetch(`${API_BASE}/api/produksi/rewind-kecil/status`);
+      const st = await res.json();
+      if(log){ log.style.display="block"; log.textContent=st.log||""; log.scrollTop=log.scrollHeight; }
+      if(!st.running){
+        clearInterval(rewindKecilPollTimer); rewindKecilPollTimer=null;
+        if(btn){ btn.disabled=false; btn.classList.remove("spinning"); }
+        const ok = st.returncode === 0;
+        if(status) status.innerText = ok
+          ? `✅ Selesai — ${st.rows_written ?? 0} baris${st.finished_at ? " — "+st.finished_at : ""}`
+          : `⚠️ Gagal${st.error ? ": "+st.error : ""}`;
+        toast(ok ? `Rewind Kecil selesai (${st.rows_written ?? 0} baris)` : "Refresh Rewind Kecil gagal — cek log", ok ? "success" : "error");
+        if(ok) loadWasteRewind(true); // data REWIND_PY ikut baru setelah sheet REWIND sumbernya di-refresh
+      }
+    }catch(e){}
+  }
+
+  // ==================== WASTE REWIND ====================
+  const wasteRewindVisibleHeaders = [
+    "JO","SPK","NO_JO","Nama_Produk","Planning_Order","Planning_Meter",
+    "Bahan_Awal_Printing_(Meter)","Meter_Hilang_Rewind","Hasil_Slitting_(Rol)",
+    "Hasil_Slitting_(Meter)","Waste_Slitting_Meter","Persentase_Waste_(%)",
+    "Waste_Slitting_After_Rewind_Meter","Waste_Slitting_After_Rewind_Presentase"
+  ];
+  let wasteRewindHeaders = [], wasteRewindRows = [];
+  function escHtml(v){ return String(v ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;"); }
+  async function loadWasteRewind(force=false){
+    const body = document.getElementById("wrwBody");
+    if(!body) return;
+    const btn = document.getElementById("wrwRefreshBtn");
+    if(force && btn) btn.classList.add("spinning");
+    body.innerHTML = skeletonRows(16);
+    try{
+      const res = await fetch(`${API_BASE}/api/waste-rewind${force?"?refresh=1":""}`);
+      const data = await res.json();
+      if(!res.ok || !data.success) throw new Error(data.message || "Gagal memuat Waste Rewind");
+      wasteRewindHeaders = data.headers || [];
+      wasteRewindRows = data.rows || [];
+      renderWasteRewindHead();
+      renderWasteRewind();
+      if(force) toast(`Waste Rewind diperbarui — ${wasteRewindRows.length} baris`, "success");
+    }catch(e){
+      document.getElementById("wrwHead").innerHTML="";
+      body.innerHTML=emptyState(1,"Gagal memuat Waste Rewind: "+e.message,"⚠️");
+    }finally{ if(btn) btn.classList.remove("spinning"); }
+  }
+  function renderWasteRewindHead(){
+    const head=document.getElementById("wrwHead"); if(!head) return;
+    head.innerHTML = wasteRewindVisibleHeaders.map(h=>`<th>${escHtml(h)}</th>`).join("")+`<th>DETAIL</th>`;
+  }
+  function renderWasteRewind(){
+    const body=document.getElementById("wrwBody"); if(!body) return;
+    const kw=(document.getElementById("wrwSearch")?.value||"").toLowerCase();
+    const rows=wasteRewindRows.filter(r=>!kw || wasteRewindHeaders.some(h=>String(r[h]??"").toLowerCase().includes(kw)));
+    if(!rows.length){ body.innerHTML=emptyState(wasteRewindVisibleHeaders.length+1,"Tidak ada data Waste Rewind"); return; }
+    body.innerHTML=rows.map((r,i)=>`<tr class="row-in" style="animation-delay:${Math.min(i*12,250)}ms">`+
+      wasteRewindVisibleHeaders.map(h=>`<td>${escHtml(r[h]??"")}</td>`).join("")+`<td><button class="wrw-detail-btn" onclick="openWasteRewindDetail(${wasteRewindRows.indexOf(r)})">🔎 Detail</button></td></tr>`).join("");
+  }
+  function openWasteRewindDetail(idx){
+    const row=wasteRewindRows[idx]; if(!row) return;
+    document.getElementById("wrwDetailTitle").innerText="Detail Waste Rewind";
+    document.getElementById("wrwDetailSub").innerText=`JO: ${row["JO"]||"-"} · Produk: ${row["Nama_Produk"]||"-"}`;
+    document.getElementById("wrwDetailGrid").innerHTML=wasteRewindHeaders.map(h=>`<div class="wrw-detail-item"><div class="lbl">${escHtml(h)}</div><div class="val">${escHtml(row[h]??"")||"-"}</div></div>`).join("");
+    document.getElementById("wrwDetailOverlay").style.display="flex";
+  }
+  function closeWasteRewindDetail(){ document.getElementById("wrwDetailOverlay").style.display="none"; }
+  document.addEventListener("keydown",e=>{if(e.key==="Escape") closeWasteRewindDetail();});
+
+  // ============================================================
+  // DATA GUDANG — file diupload lewat kartu "Data Gudang" di halaman
+  // Input Data Produksi (upload file -> pilih sheet dari modal), disimpan
+  // ke config.json (source_key "gudang"). Kartu ini SENGAJA TIDAK ikut
+  // tombol "Refresh Semua" di halaman itu.
+  // Eksekusi refresh (tarik data & tulis ke tab "API") ada di halaman
+  // Data Gudang BJB & BJL, lewat tombol Refresh masing2 -- keduanya
+  // memanggil endpoint yang sama (/api/gudang/refresh), karena satu
+  // sumber ini isinya gabungan BJB+BJL (dibedakan kolom AREA).
+  // ============================================================
+  let gudangCardPickedFile = null; // file yang baru dipilih user di modal 1, sebelum sheet dipilih
+
+  function gudangStatusLine(src){
+    return src.last_import
+      ? `Terakhir refresh: ${src.last_import} — ${src.last_status === "OK" ? `✅ ${src.last_rows ?? 0} baris` : `⚠️ ${src.last_error || "gagal"}`}`
+      : "Belum pernah di-refresh.";
+  }
+
+  function gudangSourceInfoLine(src){
+    if(!src.filename || !src.sheet_name) return "File/sheet belum dipilih (upload lewat kartu \"Data Gudang\" di Input Data Produksi).";
+    const label = src.original_filename || src.filename;
+    return `Sumber saat ini: <b>${label}</b> — sheet <b>${src.sheet_name}</b>` +
+      (src.uploaded_at ? `<br><span style="color:var(--ink-faint); font-size:10.5px;">Diupload: ${src.uploaded_at}</span>` : "");
+  }
+
+  // ---- Kartu "Data Gudang" di halaman Input Data Produksi ----
+  async function loadGudangCardInfo(){
+    const pill = document.getElementById("gudangCardPill");
+    const info = document.getElementById("gudangCardInfo");
+    if(!pill) return; // halaman belum dirender
+    try{
+      const res = await fetch(`${API_BASE}/api/gudang/sources`);
+      const data = await res.json();
+      const src = data["gudang"] || {};
+      if(src.filename && src.sheet_name){
+        pill.className = "status-pill on"; pill.innerText = "🟢 Terpilih";
+      } else {
+        pill.className = "status-pill off"; pill.innerText = "⚪ Belum dipilih";
+      }
+      info.innerHTML = gudangSourceInfoLine(src) + `<br>${gudangStatusLine(src)}`;
+    } catch(e){
+      info.innerText = "Gagal memuat status.";
+    }
+  }
+
+  // ---- Dropzone generik: klik ATAU drag & drop file, langsung panggil
+  // onFile(file) begitu ada file terpilih -- dipakai bareng oleh kartu
+  // Data Gudang & Update Stock, supaya keduanya konsisten & tidak perlu
+  // tombol "Upload" terpisah lagi (drop file = langsung jalan). ----
+  function setupUploadDropzone(dropId, inputId, onFile){
+    const drop = document.getElementById(dropId);
+    const input = document.getElementById(inputId);
+    if(!drop || !input) return;
+    drop.addEventListener("click", () => input.click());
+    drop.addEventListener("keydown", e => {
+      if(e.key === "Enter" || e.key === " "){ e.preventDefault(); input.click(); }
+    });
+    input.addEventListener("change", () => {
+      if(input.files && input.files[0]) onFile(input.files[0]);
+      input.value = ""; // biar milih file yang sama persis lagi tetap trigger "change"
+    });
+    ["dragenter","dragover"].forEach(evt => drop.addEventListener(evt, e => {
+      e.preventDefault(); e.stopPropagation(); drop.classList.add("dragover");
+    }));
+    ["dragleave","drop"].forEach(evt => drop.addEventListener(evt, e => {
+      e.preventDefault(); e.stopPropagation(); drop.classList.remove("dragover");
+    }));
+    drop.addEventListener("drop", e => {
+      const file = e.dataTransfer.files && e.dataTransfer.files[0];
+      if(file) onFile(file);
+    });
+  }
+
+  // Upload file yang dipilih/di-drop user LANGSUNG ke server (bukan baca
+  // dari path folder lokal lagi) -- server simpan file itu di disknya
+  // sendiri lalu balikin daftar sheet di dalamnya. Ini yang bikin fitur
+  // ini tetap jalan walau app-nya sudah di-deploy online (server tidak
+  // pernah perlu tahu atau mengintip isi harddisk komputer user).
+  async function gudangCardUploadFile(file){
+    gudangCardPickedFile = null;
+    const drop = document.getElementById("gudangDropZone");
+    const text = document.getElementById("gudangDropZoneText");
+    const sub = document.getElementById("gudangDropZoneSub");
+    const originalSub = sub.innerText;
+    drop.classList.add("uploading");
+    text.innerHTML = `<b>${file.name}</b>`;
+    sub.innerText = "Mengunggah...";
+    try{
+      const formData = new FormData();
+      formData.append("file", file);
+      // JANGAN set header Content-Type manual -- browser wajib yang isi
+      // sendiri (termasuk boundary multipart-nya). Kalau dipaksa isi manual,
+      // upload-nya gagal kebaca di sisi server.
+      const res = await fetch(`${API_BASE}/api/gudang/upload`, { method:"POST", body: formData });
+      const data = await res.json();
+      if(!data.success){ toast(data.message || "Gagal upload file", "error"); return; }
+      if(!data.sheets || data.sheets.length === 0){ toast("File ini tidak punya sheet.", "error"); return; }
+
+      gudangCardPickedFile = data.filename;
+      const listEl = document.getElementById("gudangSheetModalList");
+      listEl.innerHTML = `<div class="gudang-pick-list">` + data.sheets.map(s => `
+        <div class="gudang-pick-item" data-sheet="${s}" onclick="gudangCardSelectSheet(this.dataset.sheet)">
+          <span>📑 ${s}</span>
+        </div>
+      `).join("") + `</div>`;
+      document.getElementById("gudangSheetModalOverlay").style.display = "flex";
+    } catch(e){
+      toast("Error: " + e.message, "error");
+    } finally {
+      drop.classList.remove("uploading");
+      text.innerHTML = `<b>Pilih file</b> atau tarik &amp; lepas ke sini`;
+      sub.innerText = originalSub;
+    }
+  }
+
+  function closeGudangSheetModal(){
+    document.getElementById("gudangSheetModalOverlay").style.display = "none";
+  }
+
+  async function gudangCardSelectSheet(sheet){
+    const filename = gudangCardPickedFile;
+    try{
+      const res = await fetch(`${API_BASE}/api/gudang/save-selection`, {
+        method:"POST", headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({ filename, sheet })
+      });
+      const data = await res.json();
+      if(data.success){
+        closeGudangSheetModal();
+        toast(`Sumber Data Gudang disimpan: ${filename} — ${sheet}`, "success");
+        loadGudangCardInfo();
+      } else {
+        toast(data.message || "Gagal menyimpan pilihan", "error");
+      }
+    } catch(e){
+      toast("Error: " + e.message, "error");
+    }
+  }
+
+  // ============================================================
+  // UPDATE STOCK (mode file) — kartu "Update Stock" di halaman Input
+  // Data Produksi, mirip Data Gudang di atas (upload Excel langsung),
+  // bedanya sheet yang dipilih BISA LEBIH DARI SATU, jadi dipilih lewat
+  // modal "Pilih Sheet" GENERIK yang sama dipakai source link lain
+  // (openSheetModal/saveSheetSelection di bawah, source_key
+  // "update_stock" -- lihat cabang khusus untuk key ini di situ karena
+  // source ini SENGAJA tidak ada di produksiSources, lihat komentar
+  // produksi_sources() di app.py).
+  // ============================================================
+  let updateStockSource = { label: "Update Stock", sheets: [] }; // cache dari /api/update-stock-source
+
+  function updateStockSourceInfoLine(src){
+    if(!src.filename) return "Belum ada file diupload.";
+    const label = src.original_filename || src.filename;
+    return `Sumber saat ini: <b>${label}</b>` +
+      (src.uploaded_at ? `<br><span style="color:var(--ink-faint); font-size:10.5px;">Diupload: ${src.uploaded_at}</span>` : "");
+  }
+
+  async function loadUpdateStockSourceCard(){
+    const pill = document.getElementById("updateStockCardPill");
+    if(!pill) return; // halaman belum dirender
+    try{
+      const res = await fetch(`${API_BASE}/api/update-stock-source`);
+      updateStockSource = await res.json();
+      updateStockSource.label = "Update Stock";
+      renderUpdateStockSourceCard();
+    } catch(e){
+      document.getElementById("updateStockCardInfo").innerText = "Gagal memuat status.";
+    }
+  }
+
+  function renderUpdateStockSourceCard(){
+    const src = updateStockSource;
+    const pill = document.getElementById("updateStockCardPill");
+    const info = document.getElementById("updateStockCardInfo");
+    const sheetCount = (src.sheets || []).length;
+    pill.className = sheetCount ? "status-pill on" : "status-pill off";
+    pill.innerText = sheetCount ? "🟢 Terpilih" : "⚪ Belum dipilih";
+    const lastImportLine = src.last_import
+      ? `Terakhir import: ${src.last_import} — ${src.last_status === "OK" ? `✅ ${src.last_rows ?? 0} baris` : `⚠️ ${src.last_error || "gagal"}`}`
+      : `Belum pernah di-import`;
+    info.innerHTML = updateStockSourceInfoLine(src) + `<br>${lastImportLine}`;
+    const sheetSummary = sheetCount ? `<b>${sheetCount}</b> sheet dicentang: ${src.sheets.join(", ")}` : `Belum ada sheet dicentang`;
+    document.getElementById("updateStockSheetSummary").innerHTML = sheetSummary;
+  }
+
+  async function updateStockCardUploadFile(file){
+    const drop = document.getElementById("updateStockDropZone");
+    const text = document.getElementById("updateStockDropZoneText");
+    const sub = document.getElementById("updateStockDropZoneSub");
+    const originalSub = sub.innerText;
+    drop.classList.add("uploading");
+    text.innerHTML = `<b>${file.name}</b>`;
+    sub.innerText = "Mengunggah...";
+    try{
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch(`${API_BASE}/api/update-stock-source/upload`, { method:"POST", body: formData });
+      const data = await res.json();
+      if(!data.success){ toast(data.message || "Gagal upload file", "error"); return; }
+      if(!data.sheets || data.sheets.length === 0){ toast("File ini tidak punya sheet.", "error"); return; }
+
+      detectedSheetsCache["update_stock"] = data.sheets;
+      updateStockSource.sheets = []; // direset di server juga -- user pilih ulang dari file baru ini
+      await loadUpdateStockSourceCard();
+      toast(`File terupload — ${data.sheets.length} sheet terdeteksi`, "success");
+      openSheetModal("update_stock"); // langsung buka checklist biar user cepat pilih
+    } catch(e){
+      toast("Error: " + e.message, "error");
+    } finally {
+      drop.classList.remove("uploading");
+      text.innerHTML = `<b>Pilih file</b> atau tarik &amp; lepas ke sini`;
+      sub.innerText = originalSub;
+    }
+  }
+
+  // ============================================================
+  // FORM SERAH TERIMA 2 & VALIDASI 2 (mode file) — kartu "Form Serah
+  // Terima 2" & "Validasi 2" di halaman Input Data Produksi. Alurnya
+  // PERSIS sama seperti "Update Stock" di atas (upload Excel -> centang
+  // banyak sheet lewat modal "Pilih Sheet" generik). BEDA: dua kartu ini
+  // TIDAK ikut "Refresh Semua" -- eksekusinya (run_update_stock_import)
+  // dipicu otomatis dari backend tiap kali /api/gudang/refresh dipanggil
+  // (tombol Refresh di halaman Data Gudang BJB/BJL), lihat gudangRefresh()
+  // di bawah.
+  // ============================================================
+  let formSt2Source = { label: "Form Serah Terima 2", sheets: [] }; // cache dari /api/form-st2-source
+  let val2Source = { label: "Validasi 2", sheets: [] };             // cache dari /api/val2-source
+
+  async function loadFormSt2SourceCard(){
+    const pill = document.getElementById("formSt2CardPill");
+    if(!pill) return; // halaman belum dirender
+    try{
+      const res = await fetch(`${API_BASE}/api/form-st2-source`);
+      formSt2Source = await res.json();
+      formSt2Source.label = "Form Serah Terima 2";
+      renderFormSt2SourceCard();
+    } catch(e){
+      document.getElementById("formSt2CardInfo").innerText = "Gagal memuat status.";
+    }
+  }
+
+  function renderFormSt2SourceCard(){
+    const src = formSt2Source;
+    const pill = document.getElementById("formSt2CardPill");
+    const info = document.getElementById("formSt2CardInfo");
+    const sheetCount = (src.sheets || []).length;
+    pill.className = sheetCount ? "status-pill on" : "status-pill off";
+    pill.innerText = sheetCount ? "🟢 Terpilih" : "⚪ Belum dipilih";
+    const lastImportLine = src.last_import
+      ? `Terakhir import: ${src.last_import} — ${src.last_status === "OK" ? `✅ ${src.last_rows ?? 0} baris` : `⚠️ ${src.last_error || "gagal"}`}`
+      : `Belum pernah di-import`;
+    info.innerHTML = updateStockSourceInfoLine(src) + `<br>${lastImportLine}`;
+    const sheetSummary = sheetCount ? `<b>${sheetCount}</b> sheet dicentang: ${src.sheets.join(", ")}` : `Belum ada sheet dicentang`;
+    document.getElementById("formSt2SheetSummary").innerHTML = sheetSummary;
+  }
+
+  async function formSt2CardUploadFile(file){
+    const drop = document.getElementById("formSt2DropZone");
+    const text = document.getElementById("formSt2DropZoneText");
+    const sub = document.getElementById("formSt2DropZoneSub");
+    const originalSub = sub.innerText;
+    drop.classList.add("uploading");
+    text.innerHTML = `<b>${file.name}</b>`;
+    sub.innerText = "Mengunggah...";
+    try{
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch(`${API_BASE}/api/form-st2-source/upload`, { method:"POST", body: formData });
+      const data = await res.json();
+      if(!data.success){ toast(data.message || "Gagal upload file", "error"); return; }
+      if(!data.sheets || data.sheets.length === 0){ toast("File ini tidak punya sheet.", "error"); return; }
+
+      detectedSheetsCache["form_st_2"] = data.sheets;
+      formSt2Source.sheets = []; // direset di server juga -- user pilih ulang dari file baru ini
+      await loadFormSt2SourceCard();
+      toast(`File terupload — ${data.sheets.length} sheet terdeteksi`, "success");
+      openSheetModal("form_st_2"); // langsung buka checklist biar user cepat pilih
+    } catch(e){
+      toast("Error: " + e.message, "error");
+    } finally {
+      drop.classList.remove("uploading");
+      text.innerHTML = `<b>Pilih file</b> atau tarik &amp; lepas ke sini`;
+      sub.innerText = originalSub;
+    }
+  }
+
+  async function loadVal2SourceCard(){
+    const pill = document.getElementById("val2CardPill");
+    if(!pill) return; // halaman belum dirender
+    try{
+      const res = await fetch(`${API_BASE}/api/val2-source`);
+      val2Source = await res.json();
+      val2Source.label = "Validasi 2";
+      renderVal2SourceCard();
+    } catch(e){
+      document.getElementById("val2CardInfo").innerText = "Gagal memuat status.";
+    }
+  }
+
+  function renderVal2SourceCard(){
+    const src = val2Source;
+    const pill = document.getElementById("val2CardPill");
+    const info = document.getElementById("val2CardInfo");
+    const sheetCount = (src.sheets || []).length;
+    pill.className = sheetCount ? "status-pill on" : "status-pill off";
+    pill.innerText = sheetCount ? "🟢 Terpilih" : "⚪ Belum dipilih";
+    const lastImportLine = src.last_import
+      ? `Terakhir import: ${src.last_import} — ${src.last_status === "OK" ? `✅ ${src.last_rows ?? 0} baris` : `⚠️ ${src.last_error || "gagal"}`}`
+      : `Belum pernah di-import`;
+    info.innerHTML = updateStockSourceInfoLine(src) + `<br>${lastImportLine}`;
+    const sheetSummary = sheetCount ? `<b>${sheetCount}</b> sheet dicentang: ${src.sheets.join(", ")}` : `Belum ada sheet dicentang`;
+    document.getElementById("val2SheetSummary").innerHTML = sheetSummary;
+  }
+
+  async function val2CardUploadFile(file){
+    const drop = document.getElementById("val2DropZone");
+    const text = document.getElementById("val2DropZoneText");
+    const sub = document.getElementById("val2DropZoneSub");
+    const originalSub = sub.innerText;
+    drop.classList.add("uploading");
+    text.innerHTML = `<b>${file.name}</b>`;
+    sub.innerText = "Mengunggah...";
+    try{
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch(`${API_BASE}/api/val2-source/upload`, { method:"POST", body: formData });
+      const data = await res.json();
+      if(!data.success){ toast(data.message || "Gagal upload file", "error"); return; }
+      if(!data.sheets || data.sheets.length === 0){ toast("File ini tidak punya sheet.", "error"); return; }
+
+      detectedSheetsCache["val_2"] = data.sheets;
+      val2Source.sheets = []; // direset di server juga -- user pilih ulang dari file baru ini
+      await loadVal2SourceCard();
+      toast(`File terupload — ${data.sheets.length} sheet terdeteksi`, "success");
+      openSheetModal("val_2"); // langsung buka checklist biar user cepat pilih
+    } catch(e){
+      toast("Error: " + e.message, "error");
+    } finally {
+      drop.classList.remove("uploading");
+      text.innerHTML = `<b>Pilih file</b> atau tarik &amp; lepas ke sini`;
+      sub.innerText = originalSub;
+    }
+  }
+
+  setupUploadDropzone("gudangDropZone", "gudangFileUploadInput", gudangCardUploadFile);
+  setupUploadDropzone("updateStockDropZone", "updateStockFileUploadInput", updateStockCardUploadFile);
+  setupUploadDropzone("formSt2DropZone", "formSt2FileUploadInput", formSt2CardUploadFile);
+  setupUploadDropzone("val2DropZone", "val2FileUploadInput", val2CardUploadFile);
+
+  // ---- Halaman Data Gudang BJB / BJL (tampilan + tombol Refresh saja) ----
+  async function loadGudangStatus(pageKey){
+    const infoEl = document.getElementById(`gudangSourceInfo-${pageKey}`);
+    const statusEl = document.getElementById(`gudangStatus-${pageKey}`);
+    try{
+      const res = await fetch(`${API_BASE}/api/gudang/sources`);
+      const data = await res.json();
+      const src = data["gudang"] || {};
+      infoEl.innerHTML = gudangSourceInfoLine(src);
+      statusEl.innerText = gudangStatusLine(src);
+    } catch(e){
+      statusEl.innerText = "Gagal memuat status terakhir.";
+    }
+  }
+
+  async function gudangRefresh(pageKey){
+    const btn = document.getElementById(`gudangBtnRefresh-${pageKey}`);
+    const resultEl = document.getElementById(`gudangResult-${pageKey}`);
+    btn.disabled = true; btn.classList.add("spinning");
+    resultEl.innerHTML = `⏳ Sedang menarik data & menulis ke sheet...`;
+    try{
+      const res = await fetch(`${API_BASE}/api/gudang/refresh`, { method:"POST" });
+      const data = await res.json();
+      if(data.success){
+        let msg = `✅ Gudang: ${data.rows_written} baris ditulis.`;
+        const extraIcons = { form_st_2: "🤝 Form Serah Terima 2", val_2: "✅ Validasi 2" };
+        (data.extra_results || []).forEach(r => {
+          const label = extraIcons[r.source_key] || r.source_key;
+          msg += r.status === "OK"
+            ? `<br>${label}: ${r.rows_written ?? 0} baris.`
+            : `<br>${label}: ⚠️ ${r.status}.`;
+        });
+        const classErrors = data.classification_errors || [];
+        const extraErrors = data.extra_errors || [];
+        const allErrors = [...classErrors, ...extraErrors];
+        if(allErrors.length){
+          msg += `<br>⚠️ ${allErrors.join(" | ")}`;
+          toast("Refresh selesai, ada bagian yang bermasalah — cek log", "error");
+        } else {
+          toast("Refresh berhasil (Gudang + klasifikasi BJB/BJL + Form Serah Terima 2 + Validasi 2)", "success");
+        }
+        resultEl.innerHTML = msg;
+      } else {
+        resultEl.innerHTML = `⚠️ ${data.message || "Gagal"}`;
+        toast(data.message || "Gagal refresh", "error");
+      }
+    } catch(e){
+      resultEl.innerHTML = `⚠️ Error: ${e.message}`;
+      toast("Error: " + e.message, "error");
+    } finally {
+      btn.disabled = false; btn.classList.remove("spinning");
+      loadGudangStatus(pageKey);
+    }
+  }
+
+  // ============================================================
+  // FSTL — LAMPIRAN WASTE
+  // Kartu diambil gabung dari SEMUA sheet '{username}_Kitir' lewat
+  // GET /api/fstl/list, filter berdasarkan siapa yang input (bukan lagi
+  // status Open/Selesai), dan disimpan lewat POST /api/fstl/save (append
+  // ke bawah sheet milik user yang lagi login).
+  // ============================================================
+  const fstlProcessMeta = {
+    "Printing":      { emoji:"🖨️", bg:"#EFEBFF", text:"#4B3F9E", border:"#D9CFFF" },
+    "Rewinding":     { emoji:"🌀", bg:"#FFE7F1", text:"#C2266E", border:"#FFD1E6" },
+    "Dry Laminasi":  { emoji:"🔥", bg:"#FFF3DE", text:"#8A5A00", border:"#FFE3AD" },
+    "Extrusi":       { emoji:"🧪", bg:"#E7F0FF", text:"#1E5FC2", border:"#CFE2FF" },
+    "Slitting":      { emoji:"✂️", bg:"#FFE9E0", text:"#C24A1E", border:"#FFD3C2" },
+    "Bag Making":    { emoji:"🛍️", bg:"#E6FBEA", text:"#188549", border:"#C8F2D2" }
+  };
+
+  let fstlCards = [];       // hasil fetch /api/fstl/list, gabungan semua sheet *_Kitir
+  let fstlUsernames = [];   // daftar username yang muncul, buat bikin chip filter
+  let fstlUserFilter = "semua";
+  let fstlRenderedRows = []; // kartu yang lagi ditampilkan di grid (sudah difilter search/user), buat lookup tombol ✏️ Revisi lewat index
+  let fstlEditingCard = null; // null = modal lagi mode "Catat Waste Baru", diisi kartu = modal lagi mode "Revisi Keterangan"
+
+  // Request yang lagi jalan (cek-JO dan/atau ambil-keterangan) disimpan di
+  // sini biar bisa di-abort begitu modal ditutup (ESC / tombol Batal / buka
+  // ulang buat JO lain) -- soalnya kalau nggak di-abort, fetch lama tetap
+  // lanjut di background dan hasilnya bisa "nyasar" ke form JO yang beda
+  // yang lagi dibuka user sekarang.
+  let fstlAbortCekJO = null;
+  let fstlAbortKeterangan = null;
+
+  function fstlCancelPendingRequests(){
+    if(fstlAbortCekJO){ fstlAbortCekJO.abort(); fstlAbortCekJO = null; }
+    if(fstlAbortKeterangan){ fstlAbortKeterangan.abort(); fstlAbortKeterangan = null; }
+  }
+
+  function fstlOpenModal(){
+    fstlCancelPendingRequests(); // buka form baru -> buang request JO sebelumnya kalau masih jalan
+    fstlEditingCard = null; // mode "Catat Waste Baru" -- semua field harus balik bisa diisi/diubah
+    document.getElementById("fstlModalTitle").innerText = "✏️ Catat Waste Baru";
+    document.getElementById("fstlSaveBtn").innerText = "💾 Simpan";
+    document.getElementById("fstlJO").value = ""; document.getElementById("fstlJO").disabled = false;
+    document.getElementById("fstlProduk").value = "";
+    const cekBtn = document.querySelector('.fstl-modal-body .fstl-btn-check');
+    if(cekBtn) cekBtn.disabled = false;
+    fstlRenderProcessPicker([], false);
+    fstlRenderRows([], false);
+    document.getElementById("fstlModalOverlay").style.display = "flex";
+  }
+  function fstlCloseModal(){
+    fstlCancelPendingRequests(); // ESC / Batal / dst -> semua request yg masih proses dibatalin, bukan cuma modalnya ditutup
+    fstlEditingCard = null;
+    document.getElementById("fstlModalOverlay").style.display = "none";
+  }
+
+  function fstlOpenRevisi(idx){
+    // Revisi kartu yang SUDAH ADA -- yang boleh diubah CUMA Keterangan.
+    // JO, Produk, dan centang proses dikunci (readonly/disabled) supaya
+    // revisi nggak sengaja mengubah identitas kartunya.
+    const card = fstlRenderedRows[idx];
+    if(!card) return;
+    fstlCancelPendingRequests();
+    fstlEditingCard = card;
+    document.getElementById("fstlModalTitle").innerText = "✏️ Revisi Keterangan";
+    document.getElementById("fstlSaveBtn").innerText = "💾 Simpan Revisi";
+    const joInput = document.getElementById("fstlJO");
+    joInput.value = card.jo; joInput.disabled = true;
+    document.getElementById("fstlProduk").value = card.produk;
+    const cekBtn = document.querySelector('.fstl-modal-body .fstl-btn-check');
+    if(cekBtn) cekBtn.disabled = true; // JO udah dikunci, jadi "Periksa" ulang nggak relevan lagi
+    fstlRenderProcessPicker(card.processes.map(p=>p.name), true);
+    // Keterangan tetap bisa diisi ulang lewat "Ambil Keterangan" -- cuma
+    // Action Plan & Status yang dikunci (lihat param locked di fstlRenderRows).
+    fstlRenderRows(card.processes, true);
+    document.getElementById("fstlModalOverlay").style.display = "flex";
+  }
+  document.addEventListener("keydown", function(e){
+    if(e.key === "Escape" && document.getElementById("fstlModalOverlay").style.display === "flex"){
+      fstlCloseModal();
+    }
+  });
+
+  function fstlRenderProcessPicker(selected, locked){
+    const wrap = document.getElementById("fstlProcessPicker");
+    wrap.innerHTML = Object.keys(fstlProcessMeta).map(name=>{
+      const meta = fstlProcessMeta[name];
+      const checked = selected.includes(name);
+      let style = checked ? `border-color:${meta.border}; background:${meta.bg}; color:${meta.text};` : "";
+      if(locked) style += " opacity:.65; cursor:not-allowed;";
+      // locked=true (mode Revisi) -> centang dikunci, JO & proses yang sudah
+      // dipilih sebelumnya tidak boleh diubah lewat revisi.
+      return `<label class="fstl-process-chip" style="${style}">
+        <span class="fstl-chip-label">${meta.emoji} ${name}</span>
+        <input type="checkbox" value="${name}" ${checked?"checked":""} ${locked?"disabled":""} onchange="fstlToggleProcess(this)">
+      </label>`;
+    }).join("");
+  }
+  function fstlToggleProcess(cb){
+    const label = cb.closest(".fstl-process-chip");
+    const meta = fstlProcessMeta[cb.value];
+    if(cb.checked){ label.style.borderColor = meta.border; label.style.background = meta.bg; label.style.color = meta.text; }
+    else { label.style.borderColor = ""; label.style.background = ""; label.style.color = ""; }
+    fstlSyncRows();
+  }
+  function fstlSyncRows(){
+    const checked = Array.from(document.querySelectorAll("#fstlProcessPicker input:checked")).map(i=>i.value);
+    const existing = {};
+    document.querySelectorAll("#fstlRows .fstl-row-card").forEach(row=>{
+      existing[row.dataset.name] = {
+        keterangan: row.querySelector(".fstl-ket").value,
+        actionPlan: row.querySelector(".fstl-act").value,
+        status: row.querySelector(".fstl-stat").value
+      };
+    });
+    fstlRenderRows(checked.map(name => ({ name, ...(existing[name] || { keterangan:"", actionPlan:"", status:"" }) })), false);
+  }
+  function fstlToggleExpand(btn){
+    const ta = btn.closest(".fstl-row-card").querySelector(".fstl-ket");
+    if(!ta) return;
+    const expanded = ta.classList.toggle("fstl-ket-expanded");
+    btn.innerHTML = expanded ? "⤡" : "⤢";
+    btn.title = expanded ? "Perkecil kotak keterangan" : "Perbesar kotak keterangan";
+    if(expanded) ta.focus();
+  }
+
+  function fstlRenderRows(items, locked){
+    const wrap = document.getElementById("fstlRows");
+    if(items.length === 0){
+      wrap.innerHTML = `<div style="font-size:12px; color:var(--fink-soft); text-align:center; padding:16px; border:1.5px dashed #e5ddff; border-radius:13px;">Pilih proses di atas dulu ya 👆</div>`;
+      return;
+    }
+    // locked=true (mode Revisi): Action Plan & Status dikunci -- yang bisa
+    // direvisi cuma Keterangan (textarea .fstl-ket sengaja TIDAK ikut dikunci
+    // di sini, dan tetap bisa diisi ulang lewat tombol "Ambil Keterangan").
+    const lockAttr = locked ? "disabled" : "";
+    wrap.innerHTML = items.map(it=>{
+      const meta = fstlProcessMeta[it.name] || { emoji:"📎", text:"var(--fink)", border:"var(--fv-soft)" };
+      return `<div class="fstl-row-card" data-name="${it.name}" data-row="${it.row || ""}" style="border-color:${meta.border};">
+        <div class="rname" style="color:${meta.text}">
+          <span class="rname-label">${meta.emoji} ${it.name}</span>
+          <button type="button" class="fstl-expand-btn" onclick="fstlToggleExpand(this)" title="Perbesar kotak keterangan">⤢</button>
+        </div>
+        <textarea class="fstl-ket" placeholder="Keterangan waste...">${it.keterangan||""}</textarea>
+        <div class="fstl-row-grid">
+          <input class="fstl-act" placeholder="Action plan..." value="${it.actionPlan||""}" ${lockAttr}>
+          <input class="fstl-stat" placeholder="Status (mis. Proses)" value="${it.status||""}" ${lockAttr}>
+        </div>
+      </div>`;
+    }).join("");
+  }
+
+  async function fstlCekJO(){
+    const jo = document.getElementById("fstlJO").value.trim();
+    if(!jo){ toast("Isi SPK/JO dulu ya", "error"); return; }
+    const btn = document.querySelector('#fstlJO ~ .fstl-btn-check') || document.querySelector('.fstl-modal-body .fstl-btn-check');
+    const produkInput = document.getElementById("fstlProduk");
+    const originalBtnHTML = btn ? btn.innerHTML : "";
+    if(btn){ btn.disabled = true; btn.innerHTML = `<span class="fstl-spinner on-dark"></span><span>Memeriksa</span>`; }
+    produkInput.value = "";
+    produkInput.classList.add("fstl-loading-shimmer");
+
+    if(fstlAbortCekJO) fstlAbortCekJO.abort(); // ada request cek-JO lama yg belum selesai -> gantiin, jangan numpuk
+    const controller = new AbortController();
+    fstlAbortCekJO = controller;
+    try{
+      const res = await fetch(`${API_BASE}/api/fstl/cek-jo`, {
+        method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ jo }),
+        signal: controller.signal
+      });
+      // form udah ganti JO / modal udah ditutup sebelum response ini sampai -> buang, jangan ditulis ke field
+      if(document.getElementById("fstlJO").value.trim() !== jo) return;
+      const data = await res.json();
+      if(!res.ok || !data.produk){
+        toast(data.error || "JO tidak ditemukan di sheet JO_1", "error");
+        return;
+      }
+      produkInput.value = data.produk;
+      toast("Produk ditemukan untuk JO " + jo, "success");
+    }catch(err){
+      if(err.name === "AbortError") return; // dibatalin (ESC/tutup modal/ganti JO), bukan error asli
+      toast("Gagal cek JO — cek koneksi ke backend", "error");
+    }finally{
+      if(fstlAbortCekJO === controller) fstlAbortCekJO = null;
+      produkInput.classList.remove("fstl-loading-shimmer");
+      if(btn){ btn.disabled = false; btn.innerHTML = originalBtnHTML; }
+    }
+  }
+
+  async function fstlCekKeteranganSemua(){
+    const jo = document.getElementById("fstlJO").value.trim();
+    if(!jo){ toast("Isi SPK/JO dulu ya", "error"); return; }
+    const checked = Array.from(document.querySelectorAll("#fstlProcessPicker input:checked")).map(i=>i.value);
+    if(checked.length === 0){ toast("Pilih minimal satu proses dulu ya", "error"); return; }
+    const btn = document.getElementById("fstlAmbilKetBtn");
+    const originalHTML = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = `<span class="fstl-spinner"></span> Mengambil...`;
+    const ketFields = checked
+      .map(name => document.querySelector(`#fstlRows .fstl-row-card[data-name="${CSS.escape(name)}"] .fstl-ket`))
+      .filter(Boolean);
+    ketFields.forEach(f => f.classList.add("fstl-loading-shimmer"));
+
+    if(fstlAbortKeterangan) fstlAbortKeterangan.abort(); // ada request lama yg belum selesai -> gantiin, jangan numpuk
+    const controller = new AbortController();
+    fstlAbortKeterangan = controller;
+    try{
+      const res = await fetch(`${API_BASE}/api/fstl/keterangan`, {
+        method:"POST", headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({ jo, processes: checked }),
+        signal: controller.signal
+      });
+      // form udah ganti JO / modal udah ditutup sebelum response ini sampai -> buang, jangan ditulis ke field JO yang salah
+      if(document.getElementById("fstlJO").value.trim() !== jo) return;
+      const data = await res.json();
+      if(!res.ok){ toast(data.error || "Gagal ambil keterangan", "error"); return; }
+      checked.forEach(name=>{
+        const row = document.querySelector(`#fstlRows .fstl-row-card[data-name="${CSS.escape(name)}"]`);
+        if(!row) return;
+        const text = (data.results && data.results[name]) || "";
+        row.querySelector(".fstl-ket").value = text; // nggak ketemu keterangan -> kosongin aja, jangan diisi pesan placeholder
+      });
+      toast("Keterangan semua proses terisi otomatis", "success");
+    }catch(err){
+      if(err.name === "AbortError") return; // dibatalin (ESC/tutup modal/ganti JO), bukan error asli
+      toast("Gagal ambil keterangan — cek koneksi ke backend", "error");
+    }finally{
+      if(fstlAbortKeterangan === controller) fstlAbortKeterangan = null;
+      ketFields.forEach(f => f.classList.remove("fstl-loading-shimmer"));
+      btn.disabled = false; btn.innerHTML = originalHTML;
+    }
+  }
+  function fstlOpenBulanModal(){
+    toast("Filter bulan — tampilannya menyusul, fokus form dulu 🙂", "info");
+  }
+
+  async function fstlLoadList(){
+    const grid = document.getElementById("fstlGrid");
+    if(grid) grid.innerHTML = `<div class="fstl-empty"><div class="fstl-spinner-lg"></div><h4 class="fstl-display">Memuat data...</h4></div>`;
+    try{
+      const res = await fetch(`${API_BASE}/api/fstl/list`);
+      const data = await res.json();
+      if(!res.ok){ toast(data.error || "Gagal ambil data waste", "error"); fstlCards = []; fstlUsernames = []; }
+      else { fstlCards = data.cards || []; fstlUsernames = data.usernames || []; }
+    }catch(err){
+      toast("Gagal ambil data waste — cek koneksi ke backend", "error");
+      fstlCards = []; fstlUsernames = [];
+    }
+    if(!fstlUsernames.includes(fstlUserFilter) && fstlUserFilter !== "semua") fstlUserFilter = "semua";
+    fstlRenderUserChips();
+    renderFstlWasteGrid();
+  }
+
+  function fstlRenderUserChips(){
+    const wrap = document.getElementById("fstlFilterUserRow");
+    if(!wrap) return;
+    const chips = ["semua", ...fstlUsernames];
+    wrap.innerHTML = chips.map(name=>{
+      const active = fstlUserFilter === name ? "active" : "";
+      const label = name === "semua" ? "Semua" : ("👤 " + name);
+      return `<span class="fstl-chip-filter ${active}" onclick="fstlFilterUser('${name.replace(/'/g,"\\'")}')">${label}</span>`;
+    }).join("");
+  }
+
+  function fstlFilterUser(name){
+    fstlUserFilter = name;
+    fstlRenderUserChips();
+    renderFstlWasteGrid();
+  }
+
+  function renderFstlWasteGrid(){
+    const grid = document.getElementById("fstlGrid");
+    if(!grid) return;
+    const kw = (document.getElementById("fstlSearch").value || "").toLowerCase();
+    const rows = fstlCards.filter(w=>{
+      const matchKw = (w.jo||"").toLowerCase().includes(kw) || (w.produk||"").toLowerCase().includes(kw);
+      const matchUser = fstlUserFilter === "semua" || w.username === fstlUserFilter;
+      return matchKw && matchUser;
+    });
+    fstlRenderedRows = rows; // simpan dulu -- dipakai fstlOpenRevisi() buat cari kartu dari tombol ✏️ Revisi
+    if(rows.length === 0){
+      grid.innerHTML = `<div class="fstl-empty"><span class="emoji">🗂️</span><h4 class="fstl-display">Belum ada catatan waste</h4><p>Klik "Catat Waste Baru" di atas buat mulai nyatet proses yang bermasalah untuk JO ini.</p></div>`;
+      return;
+    }
+    const statusLabel = { open:"🟠 Open", done:"🟢 Selesai" };
+    grid.innerHTML = rows.map((w, idx)=>{
+      const tags = w.processes.map(p=>{
+        const meta = fstlProcessMeta[p.name] || { bg:"#eee", text:"#333", emoji:"" };
+        return `<span class="fstl-tag" style="background:${meta.bg}; color:${meta.text};">${meta.emoji} ${p.name}</span>`;
+      }).join("");
+      return `<div class="fstl-card">
+        <button type="button" class="fstl-card-edit" title="Revisi keterangan" onclick="fstlOpenRevisi(${idx})">✏️</button>
+        <span class="jo">${w.jo}</span>
+        <h4>${w.produk}</h4>
+        <div class="fstl-tag-row">${tags}</div>
+        <div class="fstl-card-foot">
+          <span class="fstl-status ${w.status}">${statusLabel[w.status] || w.status}</span>
+          <span class="fstl-meta">👤 ${w.username}</span>
+        </div>
+      </div>`;
+    }).join("");
+  }
+
+  async function fstlSaveWaste(){
+    if(fstlEditingCard){ return fstlSaveRevisi(); } // modal lagi mode Revisi -> jalur simpan beda (cuma update Keterangan)
+    const jo = document.getElementById("fstlJO").value.trim();
+    const produk = document.getElementById("fstlProduk").value.trim();
+    if(!jo){ toast("SPK/JO wajib diisi", "error"); return; }
+    const rowsEl = document.querySelectorAll("#fstlRows .fstl-row-card");
+    if(rowsEl.length === 0){ toast("Pilih minimal satu proses waste", "error"); return; }
+    const processes = Array.from(rowsEl).map(r=>({
+      name: r.dataset.name,
+      keterangan: r.querySelector(".fstl-ket").value.trim(),
+      actionPlan: r.querySelector(".fstl-act").value.trim(),
+      status: r.querySelector(".fstl-stat").value.trim()
+    }));
+    const username = currentUser ? (currentUser.username || currentUser.USERNAME || currentUser.nama) : "UNKNOWN";
+    const saveBtn = document.getElementById("fstlSaveBtn");
+    const originalLabel = saveBtn.innerText;
+    saveBtn.disabled = true; saveBtn.innerText = "⏳ Menyimpan...";
+    try{
+      const res = await fetch(`${API_BASE}/api/fstl/save`, {
+        method:"POST", headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({ username, jo, produk, processes })
+      });
+      const data = await res.json();
+      if(!res.ok){ toast(data.error || "Gagal menyimpan ke sheet", "error"); return; }
+      toast(`Data waste tersimpan di sheet ${data.sheet || (username + "_Kitir")}`, "success");
+    }catch(err){
+      toast("Gagal menyimpan — cek koneksi ke backend", "error");
+      return;
+    }finally{
+      saveBtn.disabled = false; saveBtn.innerText = originalLabel;
+    }
+    fstlCloseModal();
+    fstlLoadList(); // refresh gabungan semua sheet *_Kitir biar kartu baru langsung muncul
+  }
+
+  async function fstlSaveRevisi(){
+    // Cuma kirim {row, keterangan} per baris proses -- JO/Produk/nama
+    // proses/Action Plan/Status sengaja TIDAK ikut dikirim, backend
+    // /api/fstl/revisi juga cuma nulis ulang kolom Keterangan.
+    const rowsEl = document.querySelectorAll("#fstlRows .fstl-row-card");
+    const processes = Array.from(rowsEl).map(r=>({
+      row: parseInt(r.dataset.row, 10),
+      keterangan: r.querySelector(".fstl-ket").value.trim()
+    })).filter(p => Number.isInteger(p.row) && p.row > 1);
+    if(processes.length === 0){ toast("Tidak ada keterangan yang bisa direvisi", "error"); return; }
+    const saveBtn = document.getElementById("fstlSaveBtn");
+    const originalLabel = saveBtn.innerText;
+    saveBtn.disabled = true; saveBtn.innerText = "⏳ Menyimpan...";
+    try{
+      const res = await fetch(`${API_BASE}/api/fstl/revisi`, {
+        method:"POST", headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({ sheet: fstlEditingCard.sheet, processes })
+      });
+      const data = await res.json();
+      if(!res.ok){ toast(data.error || "Gagal menyimpan revisi", "error"); return; }
+      toast("Keterangan berhasil direvisi", "success");
+    }catch(err){
+      toast("Gagal menyimpan revisi — cek koneksi ke backend", "error");
+      return;
+    }finally{
+      saveBtn.disabled = false; saveBtn.innerText = originalLabel;
+    }
+    fstlCloseModal();
+    fstlLoadList(); // refresh biar kartu nunjukin keterangan versi terbaru
   }
 </script>
 </body>
